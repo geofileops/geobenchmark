@@ -17,3 +17,7 @@ processing time to expect versus the time spent waiting for a benchmark to be
 run. They also fit in the memory of most desktops, so this makes it possible 
 to also benchmark libraries that don't support files too large to fit in 
 memory.
+
+The following chart shows the main results of the benchmark:
+
+![Geo benchmark](geobenchmark/results/GeoBenchmark.png)
