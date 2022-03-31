@@ -4,7 +4,7 @@ case: process large geo files.
 
 The benchmarks included always follow the following usage scenario: 
 1) read data from a geopackage file
-2) do some processing
+2) do one spatial operation on the data
 3) write the result to an output file
 
 So, if you are looking for a library for another use case (eg. process many 
