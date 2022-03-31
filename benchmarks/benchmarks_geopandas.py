@@ -41,7 +41,6 @@ def buffer(tmp_dir: Path) -> RunResult:
     # Write to output file
     start_time_write = datetime.now()
     output_path = tmp_dir / f"{input_path.stem}_geopandas_buf.gpkg"
-    # This read actually used pyogrio, so is not really geopandas
     gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")    
     result = RunResult(
@@ -83,6 +82,38 @@ def dissolve(tmp_dir: Path) -> RunResult:
             operation="dissolve", 
             secs_taken=(datetime.now()-start_time).total_seconds(),
             operation_descr="dissolve agri parcels BEFL (~500.000 polygons)")
+    
+    # Cleanup and return
+    output_path.unlink()
+    return result
+
+def dissolve_groupby(tmp_dir: Path) -> RunResult:
+    
+    ### Init ###
+    input_path, _ = testdata.get_testdata(tmp_dir)
+    
+    ### Go! ###
+    # Read input file
+    start_time = datetime.now()
+    gdf = gpd.read_file(input_path)
+    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    
+    # dissolve
+    start_time_dissolve = datetime.now()
+    gdf = gdf.dissolve(by="GEWASGROEP")
+    logger.info(f"time for dissolve: {(datetime.now()-start_time_dissolve).total_seconds()}")
+    
+    # Write to output file
+    start_time_write = datetime.now()
+    output_path = tmp_dir / f"{input_path.stem}_geopandas_diss_groupby.gpkg"
+    gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
+    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    result = RunResult(
+            package="geopandas", 
+            package_version=gpd.__version__,
+            operation="dissolve_groupby", 
+            secs_taken=(datetime.now()-start_time).total_seconds(),
+            operation_descr="dissolve on agri parcels BEFL (~500.000 polygons), groupby=GEWASGROEPs")
     
     # Cleanup and return
     output_path.unlink()
