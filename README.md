@@ -16,7 +16,8 @@ but try to strike a balance between being large enough to give an idea on
 processing time to expect versus the time spent waiting for a benchmark to be 
 run. They also fit in the memory of most desktops, so this makes it possible 
 to also benchmark libraries that don't support files too large to fit in 
-memory.
+memory. I have used geofileops on .gpkg files of up to 16 GB, and obviously  
+on such files the speed improvements become (even) more important. 
 
 The following chart shows the main results of the benchmark:
 
