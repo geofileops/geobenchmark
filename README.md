@@ -20,4 +20,4 @@ memory.
 
 The following chart shows the main results of the benchmark:
 
-![Geo benchmark](geobenchmark/results/GeoBenchmark.png)
+![Geo benchmark](results/GeoBenchmark.png)
