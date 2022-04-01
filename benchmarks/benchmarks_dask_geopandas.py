@@ -43,10 +43,10 @@ def buffer(tmp_dir: Path) -> RunResult:
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # Buffer
-    dask_gdf = dgpd.from_geopandas(gdf, npartitions=multiprocessing.cpu_count())
     start_time_buffer = datetime.now()
-    dask_gdf["geometry"] = dask_gdf["geometry"].buffer(distance=1, resolution=5).compute()
-    assert isinstance(dask_gdf, dgpd.GeoDataFrame)
+    dgdf = dgpd.from_geopandas(gdf, npartitions=multiprocessing.cpu_count())
+    dgdf["geometry"] = dgdf["geometry"].buffer(distance=1, resolution=5).compute()
+    assert isinstance(dgdf, dgpd.GeoDataFrame)
     logger.info(f"time for buffer: {(datetime.now()-start_time_buffer).total_seconds()}")
     
     # Write to output file
@@ -58,11 +58,12 @@ def buffer(tmp_dir: Path) -> RunResult:
     #dask_gdf.to_parquet(output_path) 
 
     # Convert to normal GeoDataFrame
-    result_gdf = dask_gdf.compute()
+    result_gdf = dgdf.compute()
     # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
+    # Remark: the harmonization would ideally also be done in parallel
     result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
     
-    output_path = tmp_dir / f"{input_path.stem}_geopandas_buf.gpkg"
+    output_path = tmp_dir / f"{input_path.stem}_{_get_package()}_buf.gpkg"
     pyogrio.write_dataframe(result_gdf, output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")    
     result = RunResult(
@@ -79,7 +80,6 @@ def buffer(tmp_dir: Path) -> RunResult:
 
     return result
 
-"""
 def dissolve(tmp_dir: Path) -> RunResult:
     
     ### Init ###
@@ -88,28 +88,36 @@ def dissolve(tmp_dir: Path) -> RunResult:
     ### Go! ###
     # Read input file
     start_time = datetime.now()
-    gdf = gpd.read_file(input_path)
+    gdf = pyogrio.read_dataframe(input_path)
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # dissolve
     start_time_dissolve = datetime.now()
-    gdf = gdf.dissolve()
+    dgdf = dgpd.from_geopandas(gdf, npartitions=multiprocessing.cpu_count())
+    dgdf = dgdf.dissolve(split_out=multiprocessing.cpu_count())   # type: ignore
+    dgdf = dgdf.explode()
+    result_gdf = dgdf.compute()
     logger.info(f"time for dissolve: {(datetime.now()-start_time_dissolve).total_seconds()}")
     
     # Write to output file
     start_time_write = datetime.now()
-    output_path = tmp_dir / f"{input_path.stem}_geopandas_diss.gpkg"
-    gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
-    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    
+    # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
+    # Remark: the harmonization would ideally also be done in parallel
+    result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    
+    output_path = tmp_dir / f"{input_path.stem}_{_get_package()}_diss.gpkg"
+    pyogrio.write_dataframe(result_gdf, output_path, layer=output_path.stem, driver="GPKG")
+    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}") 
     result = RunResult(
-            package=get_package(), 
-            package_version=get_version(),
+            package=_get_package(), 
+            package_version=_get_version(),
             operation="dissolve", 
             secs_taken=(datetime.now()-start_time).total_seconds(),
             operation_descr="dissolve agri parcels BEFL (~500.000 polygons)")
     
     # Cleanup and return
-    output_path.unlink()
+    #output_path.unlink()
     return result
 
 def dissolve_groupby(tmp_dir: Path) -> RunResult:
@@ -120,30 +128,45 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     ### Go! ###
     # Read input file
     start_time = datetime.now()
-    gdf = gpd.read_file(input_path)
+    gdf = pyogrio.read_dataframe(input_path)
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # dissolve
     start_time_dissolve = datetime.now()
-    gdf = gdf.dissolve(by="GEWASGROEP")
+    dgdf = dgpd.from_geopandas(gdf, npartitions=multiprocessing.cpu_count())
+    dgdf = dgdf.dissolve(by="GEWASGROEP", split_out=multiprocessing.cpu_count())  # type: ignore
+    dgdf = dgdf.explode()
+    result_gdf = dgdf.compute()
     logger.info(f"time for dissolve: {(datetime.now()-start_time_dissolve).total_seconds()}")
     
     # Write to output file
     start_time_write = datetime.now()
-    output_path = tmp_dir / f"{input_path.stem}_geopandas_diss_groupby.gpkg"
-    gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
-    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    
+    # Remark: write to parquet is significantly faster (~4x), but isn't really 
+    # a typical geo file + actually is 1 file per partition in a directory...?
+    #output_path = tmp_dir / f"{input_path.stem}_geopandas_buf.parquet"
+    #dask_gdf.to_parquet(output_path) 
+
+    # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
+    # Remark: the harmonization would ideally also be done in parallel
+    result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    
+    output_path = tmp_dir / f"{input_path.stem}_{_get_package()}_diss_groupby.gpkg"
+    pyogrio.write_dataframe(result_gdf, output_path, layer=output_path.stem, driver="GPKG")
+    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}") 
+    
     result = RunResult(
-            package=get_package(), 
-            package_version=get_version(),
+            package=_get_package(), 
+            package_version=_get_version(),
             operation="dissolve_groupby", 
             secs_taken=(datetime.now()-start_time).total_seconds(),
             operation_descr="dissolve on agri parcels BEFL (~500.000 polygons), groupby=GEWASGROEPs")
     
     # Cleanup and return
-    output_path.unlink()
+    #output_path.unlink()
     return result
 
+"""
 def intersect(tmp_dir: Path) -> RunResult:
     
     ### Init ###
@@ -152,24 +175,27 @@ def intersect(tmp_dir: Path) -> RunResult:
     ### Go! ###
     # Read input files
     start_time = datetime.now()
-    input1_gdf = gpd.read_file(input1_path)
-    input2_gdf = gpd.read_file(input2_path)
+    input1_gdf = pyogrio.read_dataframe(input1_path)
+    input2_gdf = pyogrio.read_dataframe(input2_path)
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # intersect
     start_time_intersect = datetime.now()
-    output_gdf = input1_gdf.overlay(input2_gdf, how="intersection")
+    input1_dgdf = dgpd.from_geopandas(input1_gdf, npartitions=multiprocessing.cpu_count())
+    result_gdf = input1_dgdf.overlay(input2_gdf, how="intersection")
     logger.info(f"time for intersect: {(datetime.now()-start_time_intersect).total_seconds()}")
 
     # Write to output file
     start_time_write = datetime.now()
-    output_path = tmp_dir / f"{input1_path.stem}_inters_{input2_path.stem}.gpkg"
-    output_gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
+    # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
+    result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    output_path = tmp_dir / f"{input1_path.stem}_inters_{input2_path.stem}_{_get_package()}.gpkg"
+    pyogrio.write_dataframe(result_gdf, output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     secs_taken = (datetime.now()-start_time).total_seconds()
     result = RunResult(
-            package=get_package(), 
-            package_version=get_version(),
+            package=_get_package(), 
+            package_version=_get_version(),
             operation='intersect', 
             secs_taken=secs_taken,
             operation_descr="intersect between 2 agri parcel layers BEFL (2*~500.000 polygons)")
