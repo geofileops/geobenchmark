@@ -5,4 +5,4 @@ if __name__ == "__main__":
     benchmarker.run_benchmarks(["benchmarks_dask_geopandas"])
 
     # Only run specific benchmark function(s)
-    #benchmarker.run_benchmarks(["benchmarks_dask_geopandas"], ["buffer"])
+    #benchmarker.run_benchmarks(["benchmarks_dask_geopandas"], ["dissolve"])
