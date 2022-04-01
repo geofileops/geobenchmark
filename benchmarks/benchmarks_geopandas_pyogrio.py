@@ -78,13 +78,15 @@ def dissolve(tmp_dir: Path) -> RunResult:
     
     # dissolve
     start_time_dissolve = datetime.now()
-    gdf = gdf.dissolve()
+    result_gdf = gdf.dissolve()
+    assert isinstance(result_gdf, gpd.GeoDataFrame)
+    result_gdf = result_gdf.explode(ignore_index=True)
     logger.info(f"time for dissolve: {(datetime.now()-start_time_dissolve).total_seconds()}")
     
     # Write to output file
     start_time_write = datetime.now()
     output_path = tmp_dir / f"{input_path.stem}_geopandas_diss.gpkg"
-    pyogrio.write_dataframe(gdf, output_path, layer=output_path.stem, driver="GPKG")
+    pyogrio.write_dataframe(result_gdf, output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     result = RunResult(
             package=_get_package(), 
@@ -110,13 +112,15 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     
     # dissolve
     start_time_dissolve = datetime.now()
-    gdf = gdf.dissolve(by="GEWASGROEP")
+    result_gdf = gdf.dissolve(by="GEWASGROEP")
+    assert isinstance(result_gdf, gpd.GeoDataFrame)
+    result_gdf = result_gdf.explode(ignore_index=True)
     logger.info(f"time for dissolve: {(datetime.now()-start_time_dissolve).total_seconds()}")
     
     # Write to output file
     start_time_write = datetime.now()
     output_path = tmp_dir / f"{input_path.stem}_geopandas_diss_groupby.gpkg"
-    pyogrio.write_dataframe(gdf, output_path, layer=output_path.stem, driver="GPKG")
+    pyogrio.write_dataframe(result_gdf, output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     result = RunResult(
             package=_get_package(), 
@@ -143,13 +147,15 @@ def intersect(tmp_dir: Path) -> RunResult:
     
     # intersect
     start_time_intersect = datetime.now()
-    output_gdf = input1_gdf.overlay(input2_gdf, how="intersection")
+    result_gdf = input1_gdf.overlay(input2_gdf, how="intersection")
     logger.info(f"time for intersect: {(datetime.now()-start_time_intersect).total_seconds()}")
 
     # Write to output file
     start_time_write = datetime.now()
+    # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
+    result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
     output_path = tmp_dir / f"{input1_path.stem}_inters_{input2_path.stem}.gpkg"
-    pyogrio.write_dataframe(output_gdf, output_path, layer=output_path.stem, driver="GPKG")
+    pyogrio.write_dataframe(result_gdf, output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     secs_taken = (datetime.now()-start_time).total_seconds()
     result = RunResult(
