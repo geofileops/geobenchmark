@@ -5,4 +5,4 @@ if __name__ == "__main__":
     benchmarker.run_benchmarks(["benchmarks_geopandas"])
 
     # Only run specific benchmark function(s)
-    #benchmarker.run_benchmarks(["benchmarks_geopandas"], ["dissolve_groupby"])
+    #benchmarker.run_benchmarks(["benchmarks_geopandas"], ["buffer"])

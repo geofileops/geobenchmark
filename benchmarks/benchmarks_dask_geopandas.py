@@ -9,6 +9,7 @@ import multiprocessing
 from pathlib import Path
 
 import dask_geopandas as dgpd
+from geofileops.util import geoseries_util
 import pyogrio
 
 from benchmarker import RunResult
@@ -28,7 +29,7 @@ def _get_package() -> str:
     return "dask-geopandas"
 
 def _get_version() -> str:
-    return dgpd.__version__
+    return dgpd.__version__.replace("v", "")
 
 def buffer(tmp_dir: Path) -> RunResult:
     
@@ -56,8 +57,12 @@ def buffer(tmp_dir: Path) -> RunResult:
     #output_path = tmp_dir / f"{input_path.stem}_geopandas_buf.parquet"
     #dask_gdf.to_parquet(output_path) 
 
-    output_path = tmp_dir / f"{input_path.stem}_geopandas_buf.gpkg"
+    # Convert to normal GeoDataFrame
     result_gdf = dask_gdf.compute()
+    # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
+    result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    
+    output_path = tmp_dir / f"{input_path.stem}_geopandas_buf.gpkg"
     pyogrio.write_dataframe(result_gdf, output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")    
     result = RunResult(

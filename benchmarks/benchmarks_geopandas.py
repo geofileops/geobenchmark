@@ -22,10 +22,10 @@ logger = logging.getLogger(__name__)
 # The real work
 ################################################################################
 
-def get_package() -> str:
+def _get_package() -> str:
     return "geopandas"
 
-def get_version() -> str:
+def _get_version() -> str:
     return gpd.__version__
 
 def buffer(tmp_dir: Path) -> RunResult:
@@ -50,8 +50,8 @@ def buffer(tmp_dir: Path) -> RunResult:
     gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")    
     result = RunResult(
-            package=get_package(), 
-            package_version=get_version(),
+            package=_get_package(), 
+            package_version=_get_version(),
             operation="buffer", 
             secs_taken=(datetime.now()-start_time).total_seconds(),
             operation_descr="buffer agri parcels BEFL (~500.000 polygons)")
@@ -83,8 +83,8 @@ def dissolve(tmp_dir: Path) -> RunResult:
     gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     result = RunResult(
-            package=get_package(), 
-            package_version=get_version(),
+            package=_get_package(), 
+            package_version=_get_version(),
             operation="dissolve", 
             secs_taken=(datetime.now()-start_time).total_seconds(),
             operation_descr="dissolve agri parcels BEFL (~500.000 polygons)")
@@ -115,8 +115,8 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     result = RunResult(
-            package=get_package(), 
-            package_version=get_version(),
+            package=_get_package(), 
+            package_version=_get_version(),
             operation="dissolve_groupby", 
             secs_taken=(datetime.now()-start_time).total_seconds(),
             operation_descr="dissolve on agri parcels BEFL (~500.000 polygons), groupby=GEWASGROEPs")
@@ -149,8 +149,8 @@ def intersect(tmp_dir: Path) -> RunResult:
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     secs_taken = (datetime.now()-start_time).total_seconds()
     result = RunResult(
-            package=get_package(), 
-            package_version=get_version(),
+            package=_get_package(), 
+            package_version=_get_version(),
             operation='intersect', 
             secs_taken=secs_taken,
             operation_descr="intersect between 2 agri parcel layers BEFL (2*~500.000 polygons)")
