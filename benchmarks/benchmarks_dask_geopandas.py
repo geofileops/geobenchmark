@@ -5,9 +5,11 @@ Module to benchmark geopandas operations.
 
 from datetime import datetime
 import logging
+import multiprocessing
 from pathlib import Path
 
-import geopandas as gpd
+import dask_geopandas as dgpd
+import pyogrio
 
 from benchmarker import RunResult
 from benchmarks import testdata
@@ -22,11 +24,11 @@ logger = logging.getLogger(__name__)
 # The real work
 ################################################################################
 
-def get_package() -> str:
-    return "geopandas"
+def _get_package() -> str:
+    return "dask-geopandas"
 
-def get_version() -> str:
-    return gpd.__version__
+def _get_version() -> str:
+    return dgpd.__version__
 
 def buffer(tmp_dir: Path) -> RunResult:
     
@@ -36,31 +38,43 @@ def buffer(tmp_dir: Path) -> RunResult:
     ### Go! ###
     # Read input file
     start_time = datetime.now()
-    gdf = gpd.read_file(input_path)
+    gdf = pyogrio.read_dataframe(input_path)
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # Buffer
+    dask_gdf = dgpd.from_geopandas(gdf, npartitions=multiprocessing.cpu_count())
     start_time_buffer = datetime.now()
-    gdf.geometry = gdf.geometry.buffer(distance=1, resolution=5)
+    dask_gdf["geometry"] = dask_gdf["geometry"].buffer(distance=1, resolution=5).compute()
+    assert isinstance(dask_gdf, dgpd.GeoDataFrame)
     logger.info(f"time for buffer: {(datetime.now()-start_time_buffer).total_seconds()}")
     
     # Write to output file
     start_time_write = datetime.now()
+    
+    # Remark: write to parquet is significantly faster (~4x), but isn't really 
+    # a typical geo file + actually is 1 file per partition in a directory...?
+    #output_path = tmp_dir / f"{input_path.stem}_geopandas_buf.parquet"
+    #dask_gdf.to_parquet(output_path) 
+
     output_path = tmp_dir / f"{input_path.stem}_geopandas_buf.gpkg"
-    gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
+    result_gdf = dask_gdf.compute()
+    pyogrio.write_dataframe(result_gdf, output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")    
     result = RunResult(
-            package=get_package(), 
-            package_version=get_version(),
+            package=_get_package(), 
+            package_version=_get_version(),
             operation="buffer", 
             secs_taken=(datetime.now()-start_time).total_seconds(),
-            operation_descr="buffer agri parcels BEFL (~500.000 polygons)")
+            operation_descr="buffer agri parcels BEFL (~500.000 polygons)",
+            run_details={"nb_cpu": multiprocessing.cpu_count()})
     
     # Cleanup
+    #shutil.rmtree(output_path)
     output_path.unlink()
 
     return result
 
+"""
 def dissolve(tmp_dir: Path) -> RunResult:
     
     ### Init ###
@@ -158,3 +172,4 @@ def intersect(tmp_dir: Path) -> RunResult:
     # Cleanup and return
     output_path.unlink()
     return result
+"""

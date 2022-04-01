@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Module to benchmark geopandas operations.
+Module to benchmark geopandas operations using pyogrio for IO.
 """
 
 from datetime import datetime
@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 
 import geopandas as gpd
+import pyogrio
 
 from benchmarker import RunResult
 from benchmarks import testdata
@@ -23,10 +24,10 @@ logger = logging.getLogger(__name__)
 ################################################################################
 
 def get_package() -> str:
-    return "geopandas"
+    return "geopandas_pyogrio"
 
 def get_version() -> str:
-    return gpd.__version__
+    return f"{gpd.__version__}_{pyogrio.__version__}".replace("v", "")
 
 def buffer(tmp_dir: Path) -> RunResult:
     
@@ -36,7 +37,7 @@ def buffer(tmp_dir: Path) -> RunResult:
     ### Go! ###
     # Read input file
     start_time = datetime.now()
-    gdf = gpd.read_file(input_path)
+    gdf = pyogrio.read_dataframe(input_path)
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # Buffer
@@ -47,7 +48,7 @@ def buffer(tmp_dir: Path) -> RunResult:
     # Write to output file
     start_time_write = datetime.now()
     output_path = tmp_dir / f"{input_path.stem}_geopandas_buf.gpkg"
-    gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
+    pyogrio.write_dataframe(gdf, output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")    
     result = RunResult(
             package=get_package(), 
@@ -69,7 +70,7 @@ def dissolve(tmp_dir: Path) -> RunResult:
     ### Go! ###
     # Read input file
     start_time = datetime.now()
-    gdf = gpd.read_file(input_path)
+    gdf = pyogrio.read_dataframe(input_path)
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # dissolve
@@ -80,7 +81,7 @@ def dissolve(tmp_dir: Path) -> RunResult:
     # Write to output file
     start_time_write = datetime.now()
     output_path = tmp_dir / f"{input_path.stem}_geopandas_diss.gpkg"
-    gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
+    pyogrio.write_dataframe(gdf, output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     result = RunResult(
             package=get_package(), 
@@ -101,7 +102,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     ### Go! ###
     # Read input file
     start_time = datetime.now()
-    gdf = gpd.read_file(input_path)
+    gdf = pyogrio.read_dataframe(input_path)
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # dissolve
@@ -112,7 +113,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     # Write to output file
     start_time_write = datetime.now()
     output_path = tmp_dir / f"{input_path.stem}_geopandas_diss_groupby.gpkg"
-    gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
+    pyogrio.write_dataframe(gdf, output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     result = RunResult(
             package=get_package(), 
@@ -133,8 +134,8 @@ def intersect(tmp_dir: Path) -> RunResult:
     ### Go! ###
     # Read input files
     start_time = datetime.now()
-    input1_gdf = gpd.read_file(input1_path)
-    input2_gdf = gpd.read_file(input2_path)
+    input1_gdf = pyogrio.read_dataframe(input1_path)
+    input2_gdf = pyogrio.read_dataframe(input2_path)
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # intersect
@@ -145,7 +146,7 @@ def intersect(tmp_dir: Path) -> RunResult:
     # Write to output file
     start_time_write = datetime.now()
     output_path = tmp_dir / f"{input1_path.stem}_inters_{input2_path.stem}.gpkg"
-    output_gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
+    pyogrio.write_dataframe(output_gdf, output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     secs_taken = (datetime.now()-start_time).total_seconds()
     result = RunResult(
