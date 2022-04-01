@@ -23,6 +23,12 @@ logger = logging.getLogger(__name__)
 # The real work
 ################################################################################
 
+def _get_package() -> str:
+    return "geofileops"
+
+def _get_version() -> str:
+    return gfo.__version__
+
 def buffer(tmp_dir: Path) -> RunResult:
     
     # Init
@@ -33,8 +39,8 @@ def buffer(tmp_dir: Path) -> RunResult:
     start_time = datetime.now()
     gfo.buffer(input_path, output_path, distance=1, force=True)
     result = RunResult(
-            package="geofileops", 
-            package_version=gfo.__version__,
+            package=_get_package(), 
+            package_version=_get_version(),
             operation="buffer", 
             secs_taken=(datetime.now()-start_time).total_seconds(),
             operation_descr="buffer on agri parcel layer BEFL (~500.000 polygons)",
@@ -58,8 +64,8 @@ def dissolve_nogroupby(tmp_dir: Path) -> RunResult:
             explodecollections=True,
             force=True)
     result = RunResult(
-            package="geofileops", 
-            package_version=gfo.__version__,
+            package=_get_package(), 
+            package_version=_get_version(),
             operation="dissolve",
             secs_taken=(datetime.now()-start_time).total_seconds(),
             operation_descr="dissolve on agri parcels BEFL (~500.000 polygons)",
@@ -84,8 +90,8 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
             explodecollections=True,
             force=True)
     result = RunResult(
-            package="geofileops", 
-            package_version=gfo.__version__,
+            package=_get_package(), 
+            package_version=_get_version(),
             operation="dissolve_groupby", 
             secs_taken=(datetime.now()-start_time).total_seconds(),
             operation_descr="dissolve on agri parcels BEFL (~500.000 polygons), groupby=[GEWASGROEP]",
@@ -108,8 +114,8 @@ def intersect(tmp_dir: Path) -> RunResult:
             output_path=output_path,
             force=True)
     result = RunResult(
-            package="geofileops", 
-            package_version=gfo.__version__,
+            package=_get_package(), 
+            package_version=_get_version(),
             operation='intersect', 
             secs_taken=(datetime.now()-start_time).total_seconds(),
             operation_descr="intersect between 2 agri parcel layers BEFL (2*~500.000 polygons)",
@@ -132,8 +138,8 @@ def union(tmp_dir: Path) -> RunResult:
             output_path=output_path,
             force=True)
     result = RunResult(
-            package="geofileops", 
-            package_version=gfo.__version__,
+            package=_get_package(), 
+            package_version=_get_version(),
             operation="union",
             secs_taken=(datetime.now()-start_time).total_seconds(),
             operation_descr="union between 2 agri parcel layers BEFL (2*~500.000 polygons)",

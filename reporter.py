@@ -52,7 +52,7 @@ def generate_reports(
                     df=package_operation_df,
                     title=f"{package}-{operation}\n({operation_descr})", 
                     size=(8, 6),
-                    print_labels_on_points=True,
+                    label_points="above",
                     y_value_formatter="{0:.2f}",
                     output_path=results_report_path)
     
@@ -76,7 +76,7 @@ def generate_reports(
             title="Comparison of libraries, time in sec", 
             output_path=results_report_path,
             yscale="log",
-            print_labels_on_points=True,
+            label_points="right",
             y_value_formatter="{0:.0f}",
             size=(8, 6),
             linestyle="None",
@@ -88,7 +88,7 @@ def save_chart(
         output_path: Path,
         yscale: Optional[str] = None,
         y_value_formatter: Optional[str] = None,
-        print_labels_on_points: bool = False,
+        label_points: Optional[str] = None,
         open_output_file: bool = False,
         size: Tuple[float, float] = (8, 4),
         plot_kind: str = "line",
@@ -107,7 +107,7 @@ def save_chart(
               - {0:.2%} for a percentage.
               - {0:.2f} for a float with two decimals.
             Defaults to None.
-        print_labels_on_points (bool, optional): _description_. Defaults to False.
+        label_points (str, optional): _description_. Defaults to None.
         open_output_file (bool, optional): _description_. Defaults to False.
         size (Tuple[float, float], optional): _description_. Defaults to (8, 4).
         plot_kind (str, optional): _description_. Defaults to "line".
@@ -157,10 +157,29 @@ def save_chart(
     markers = ("+", ".", "o", "*")
     max_y_value = None
     min_y_value = None
+    
+    xytext = (0, 0)
+    horizontal_alignment = "center"
+    vertical_alignment = "center"
+    if label_points is not None:
+        if label_points in ["alternate", "below"]:
+            xytext = (0, -5)
+            vertical_alignment = "top"
+        elif label_points == "above":
+            xytext = (0, 5)
+            vertical_alignment = "bottom"
+        elif label_points == "left":
+            xytext = (-5, 0)
+            horizontal_alignment = "right"
+        elif label_points == "right":
+            xytext = (5, 0)
+            horizontal_alignment = "left"
+        else:
+            raise ValueError(f"Invalid value for labelpoints: {label_points}, should be one of alternate, below, above, left, right")
+            
     for i, line in enumerate(axs.get_lines()):
         line.set_marker(markers[i%len(markers)])
 
-        label_above_line = True
         for index, row in enumerate(df.itertuples()):
             for row_fieldname, row_fieldvalue in row._asdict().items():
                 if row_fieldname != "Index":
@@ -168,7 +187,8 @@ def save_chart(
                         max_y_value = row_fieldvalue
                     if min_y_value is None or row_fieldvalue < min_y_value:
                         min_y_value = row_fieldvalue
-                    if print_labels_on_points is True:
+                    
+                    if label_points is not None:
                         # Format label
                         if y_value_formatter is not None:
                             text = y_value_formatter.format(row_fieldvalue)
@@ -176,12 +196,13 @@ def save_chart(
                             text = str(row_fieldvalue)
                         
                         # Label below or above line? + switch
-                        if label_above_line is True:
-                            xytext = (0, 5)
-                            label_above_line = False
-                        else:
-                            xytext = (0, -15)
-                            label_above_line = True
+                        if label_points == "alternate":
+                            if xytext[1] > 0:
+                                xytext = (0, -5)
+                                vertical_alignment = "top"
+                            else:
+                                xytext = (0, 5)
+                                vertical_alignment = "bottom"
                             
                         axs.annotate(
                                 text=text, # type: ignore
@@ -190,7 +211,10 @@ def save_chart(
                                 xy=(index, row_fieldvalue),
                                 xytext=xytext, 
                                 textcoords="offset points",
-                                ha='center')
+                                ha=horizontal_alignment,
+                                va=vertical_alignment,
+                                fontsize="small",
+                                fontstyle="normal")
     
     # Set bottom and top values for y axis
     if max_y_value is not None:

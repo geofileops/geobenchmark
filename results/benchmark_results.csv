@@ -28,3 +28,8 @@ run_datetime,package,package_version,operation,operation_descr,secs_taken,run_de
 2022-03-18 17:24:35.921456,geopandas,0.10.2,dissolve,dissolve agri parcels BEFL (~500.000 polygons),2350.233106,
 2022-03-28 16:16:12.464365,geopandas,0.10.2,intersect,intersect between 2 agri parcel layers BEFL (2*~500.000 polygons),692.441793,
 2022-03-31 16:37:30.358398,geopandas,0.10.2,dissolve_groupby,"dissolve on agri parcels BEFL (~500.000 polygons), groupby=GEWASGROEPs",905.113122,
+2022-03-31 23:54:33.594656,geopandas_pyogrio,0.10.2_0.3.0,dissolve,dissolve agri parcels BEFL (~500.000 polygons),2120.427725,
+2022-04-01 00:09:48.469068,geopandas_pyogrio,0.10.2_0.3.0,dissolve_groupby,"dissolve on agri parcels BEFL (~500.000 polygons), groupby=GEWASGROEPs",914.424965,
+2022-04-01 00:15:22.791926,geopandas_pyogrio,0.10.2_0.3.0,intersect,intersect between 2 agri parcel layers BEFL (2*~500.000 polygons),333.434067,
+2022-04-01 02:55:06.762234,dask-geopandas,0.1.0,buffer,buffer agri parcels BEFL (~500.000 polygons),65.196685,{'nb_cpu': 12}
+2022-04-01 03:06:17.655215,geopandas_pyogrio,0.10.2_0.3.0,buffer,buffer agri parcels BEFL (~500.000 polygons),85.60997,

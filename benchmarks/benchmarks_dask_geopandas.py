@@ -5,9 +5,12 @@ Module to benchmark geopandas operations.
 
 from datetime import datetime
 import logging
+import multiprocessing
 from pathlib import Path
 
-import geopandas as gpd
+import dask_geopandas as dgpd
+from geofileops.util import geoseries_util
+import pyogrio
 
 from benchmarker import RunResult
 from benchmarks import testdata
@@ -23,10 +26,10 @@ logger = logging.getLogger(__name__)
 ################################################################################
 
 def _get_package() -> str:
-    return "geopandas"
+    return "dask-geopandas"
 
 def _get_version() -> str:
-    return gpd.__version__
+    return dgpd.__version__.replace("v", "")
 
 def buffer(tmp_dir: Path) -> RunResult:
     
@@ -36,31 +39,47 @@ def buffer(tmp_dir: Path) -> RunResult:
     ### Go! ###
     # Read input file
     start_time = datetime.now()
-    gdf = gpd.read_file(input_path)
+    gdf = pyogrio.read_dataframe(input_path)
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # Buffer
+    dask_gdf = dgpd.from_geopandas(gdf, npartitions=multiprocessing.cpu_count())
     start_time_buffer = datetime.now()
-    gdf.geometry = gdf.geometry.buffer(distance=1, resolution=5)
+    dask_gdf["geometry"] = dask_gdf["geometry"].buffer(distance=1, resolution=5).compute()
+    assert isinstance(dask_gdf, dgpd.GeoDataFrame)
     logger.info(f"time for buffer: {(datetime.now()-start_time_buffer).total_seconds()}")
     
     # Write to output file
     start_time_write = datetime.now()
+    
+    # Remark: write to parquet is significantly faster (~4x), but isn't really 
+    # a typical geo file + actually is 1 file per partition in a directory...?
+    #output_path = tmp_dir / f"{input_path.stem}_geopandas_buf.parquet"
+    #dask_gdf.to_parquet(output_path) 
+
+    # Convert to normal GeoDataFrame
+    result_gdf = dask_gdf.compute()
+    # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
+    result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    
     output_path = tmp_dir / f"{input_path.stem}_geopandas_buf.gpkg"
-    gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
+    pyogrio.write_dataframe(result_gdf, output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")    
     result = RunResult(
             package=_get_package(), 
             package_version=_get_version(),
             operation="buffer", 
             secs_taken=(datetime.now()-start_time).total_seconds(),
-            operation_descr="buffer agri parcels BEFL (~500.000 polygons)")
+            operation_descr="buffer agri parcels BEFL (~500.000 polygons)",
+            run_details={"nb_cpu": multiprocessing.cpu_count()})
     
     # Cleanup
+    #shutil.rmtree(output_path)
     output_path.unlink()
 
     return result
 
+"""
 def dissolve(tmp_dir: Path) -> RunResult:
     
     ### Init ###
@@ -83,8 +102,8 @@ def dissolve(tmp_dir: Path) -> RunResult:
     gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     result = RunResult(
-            package=_get_package(), 
-            package_version=_get_version(),
+            package=get_package(), 
+            package_version=get_version(),
             operation="dissolve", 
             secs_taken=(datetime.now()-start_time).total_seconds(),
             operation_descr="dissolve agri parcels BEFL (~500.000 polygons)")
@@ -115,8 +134,8 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     result = RunResult(
-            package=_get_package(), 
-            package_version=_get_version(),
+            package=get_package(), 
+            package_version=get_version(),
             operation="dissolve_groupby", 
             secs_taken=(datetime.now()-start_time).total_seconds(),
             operation_descr="dissolve on agri parcels BEFL (~500.000 polygons), groupby=GEWASGROEPs")
@@ -149,8 +168,8 @@ def intersect(tmp_dir: Path) -> RunResult:
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     secs_taken = (datetime.now()-start_time).total_seconds()
     result = RunResult(
-            package=_get_package(), 
-            package_version=_get_version(),
+            package=get_package(), 
+            package_version=get_version(),
             operation='intersect', 
             secs_taken=secs_taken,
             operation_descr="intersect between 2 agri parcel layers BEFL (2*~500.000 polygons)")
@@ -158,3 +177,4 @@ def intersect(tmp_dir: Path) -> RunResult:
     # Cleanup and return
     output_path.unlink()
     return result
+"""
