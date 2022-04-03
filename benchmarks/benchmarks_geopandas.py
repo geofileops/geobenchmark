@@ -60,6 +60,40 @@ def buffer(tmp_dir: Path) -> RunResult:
     # Cleanup
     output_path.unlink()
 
+def _clip(tmp_dir: Path) -> RunResult: 
+    ### Init ###
+    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+        
+    ### Go! ###
+    # Read input files
+    start_time = datetime.now()
+    input1_gdf = gpd.read_file(input1_path)
+    input2_gdf = gpd.read_file(input2_path)
+    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    
+    # intersect
+    start_time_intersect = datetime.now()
+    result_gdf = gpd.clip(input1_gdf, input2_gdf, keep_geom_type=True)
+    logger.info(f"time for intersect: {(datetime.now()-start_time_intersect).total_seconds()}")
+
+    # Write to output file
+    start_time_write = datetime.now()
+    # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
+    result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    output_path = tmp_dir / f"{input1_path.stem}_clip_{input2_path.stem}.gpkg"
+    result_gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
+    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    secs_taken = (datetime.now()-start_time).total_seconds()
+    result = RunResult(
+            package=_get_package(), 
+            package_version=_get_version(),
+            operation='clip', 
+            secs_taken=secs_taken,
+            operation_descr="clip between 2 agri parcel layers BEFL (2*~500.000 polygons)")
+    
+    # Cleanup and return
+    output_path.unlink()
     return result
 
 def dissolve(tmp_dir: Path) -> RunResult:
