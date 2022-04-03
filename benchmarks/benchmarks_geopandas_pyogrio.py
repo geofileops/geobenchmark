@@ -31,9 +31,8 @@ def _get_version() -> str:
     return f"{gpd.__version__}_{pyogrio.__version__}".replace("v", "")
 
 def buffer(tmp_dir: Path) -> RunResult:
-    
     ### Init ###
-    input_path, _ = testdata.get_testdata(tmp_dir)
+    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     
     ### Go! ###
     # Read input file
@@ -66,9 +65,8 @@ def buffer(tmp_dir: Path) -> RunResult:
     return result
 
 def dissolve(tmp_dir: Path) -> RunResult:
-    
     ### Init ###
-    input_path, _ = testdata.get_testdata(tmp_dir)
+    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     
     ### Go! ###
     # Read input file
@@ -100,9 +98,8 @@ def dissolve(tmp_dir: Path) -> RunResult:
     return result
 
 def dissolve_groupby(tmp_dir: Path) -> RunResult:
-    
     ### Init ###
-    input_path, _ = testdata.get_testdata(tmp_dir)
+    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     
     ### Go! ###
     # Read input file
@@ -134,9 +131,9 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     return result
 
 def intersect(tmp_dir: Path) -> RunResult:
-    
     ### Init ###
-    input1_path, input2_path = testdata.get_testdata(tmp_dir)
+    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
         
     ### Go! ###
     # Read input files
