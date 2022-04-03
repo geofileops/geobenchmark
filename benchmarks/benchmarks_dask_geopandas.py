@@ -33,9 +33,8 @@ def _get_version() -> str:
     return dgpd.__version__.replace("v", "")
 
 def buffer(tmp_dir: Path) -> RunResult:
-    
     ### Init ###
-    input_path, _ = testdata.get_testdata(tmp_dir)
+    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     
     ### Go! ###
     # Read input file
@@ -125,7 +124,7 @@ def _clip(tmp_dir: Path) -> RunResult:
 
 def dissolve(tmp_dir: Path) -> RunResult: 
     ### Init ###
-    input_path, _ = testdata.get_testdata(tmp_dir)
+    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     
     ### Go! ###
     # Read input file
@@ -159,13 +158,12 @@ def dissolve(tmp_dir: Path) -> RunResult:
             operation_descr="dissolve agri parcels BEFL (~500.000 polygons)")
     
     # Cleanup and return
-    #output_path.unlink()
+    output_path.unlink()
     return result
 
 def dissolve_groupby(tmp_dir: Path) -> RunResult:
-    
     ### Init ###
-    input_path, _ = testdata.get_testdata(tmp_dir)
+    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     
     ### Go! ###
     # Read input file
@@ -205,14 +203,15 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
             operation_descr="dissolve on agri parcels BEFL (~500.000 polygons), groupby=GEWASGROEPs")
     
     # Cleanup and return
-    #output_path.unlink()
+    output_path.unlink()
     return result
 
 """
 def intersect(tmp_dir: Path) -> RunResult:
     
     ### Init ###
-    input1_path, input2_path = testdata.get_testdata(tmp_dir)
+    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
         
     ### Go! ###
     # Read input files
