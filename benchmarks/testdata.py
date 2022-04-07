@@ -13,7 +13,7 @@ from typing import Optional
 import urllib.request
 import zipfile
 
-import geofileops as gfo  
+import geofileops as gfo
 
 ################################################################################
 # Some inits
@@ -28,20 +28,24 @@ logger = logging.getLogger(__name__)
 class TestFile(enum.Enum):
     AGRIPRC_2018 = (0, 
             "https://downloadagiv.blob.core.windows.net/landbouwgebruikspercelen/2018/Landbouwgebruikspercelen_LV_2018_GewVLA_Shape.zip",
+            ".zip",
             "agriprc_2018.gpkg")
     AGRIPRC_2019 = (1, 
             "https://downloadagiv.blob.core.windows.net/landbouwgebruikspercelen/2019/Landbouwgebruikspercelen_LV_2019_GewVLA_Shapefile.zip",
+            ".zip",
             "agriprc_2019.gpkg")
 
-    def __init__(self, value, url, filename):
+    def __init__(self, value, download_url, download_suffix, dst_name):
         self._value_ = value
-        self.url = url
-        self.filename = filename
+        self.download_url = download_url
+        self.download_suffix = download_suffix
+        self.dst_name = dst_name
 
     def get_file(self, tmp_dir: Path) -> Path:
         testfile_path = download_samplefile(
-                url=self.url,
-                dst_name=self.filename,
+                download_url=self.download_url,
+                download_suffix=self.download_suffix,
+                dst_name=self.dst_name,
                 dst_dir=tmp_dir)
         testfile_info = gfo.get_layerinfo(testfile_path)
         logger.debug(f"TestFile {self.name} contains {testfile_info.featurecount} rows.")
@@ -49,7 +53,8 @@ class TestFile(enum.Enum):
         return testfile_path
 
 def download_samplefile(
-        url: str,
+        download_url: str,
+        download_suffix: str,
         dst_name: str,
         dst_dir: Optional[Path] = None) -> Path:
     """
@@ -59,7 +64,9 @@ def download_samplefile(
     the file type as determined by the suffix of dst_name.
 
     Args:
-        url (str): the url of the file to download
+        url (str): the url of the file to download.
+        download_name (str): the file name to download to.
+        dst_name (str): the file name to save final file to.
         dst_dir (Path): the dir to downloaded the sample file to. 
             If it is None, a dir in the default tmp location will be 
             used. Defaults to None.
@@ -77,10 +84,10 @@ def download_samplefile(
 
     # If the url points to a file with the same suffix as the dst_path, 
     # just download
-    url_path = Path(url) 
-    if url_path.suffix.lower() == dst_path.suffix.lower():
+    url_path = Path(download_url) 
+    if download_suffix.lower() == dst_path.suffix.lower():
         logger.info(f"Download to {dst_path}")
-        urllib.request.urlretrieve(url, dst_path)
+        urllib.request.urlretrieve(download_url, dst_path)
     else:
         # The file downloaded is different that the destination wanted, so some 
         # converting will need to be done
@@ -93,9 +100,9 @@ def download_samplefile(
             tmp_dir.mkdir(parents=True, exist_ok=True)
         
             # Download file
-            tmp_path = tmp_dir / f"{dst_path.stem}{url_path.suffix.lower()}"
+            tmp_path = tmp_dir / f"{dst_path.stem}{download_suffix.lower()}"
             logger.info(f"Download tmp data to {tmp_path}")
-            urllib.request.urlretrieve(url, tmp_path)
+            urllib.request.urlretrieve(download_url, tmp_path)
             
             # If the temp file is a .zip file, unzip to dir
             if tmp_path.suffix == ".zip":
@@ -114,11 +121,12 @@ def download_samplefile(
                 else:
                     raise Exception(f"Should find 1 geofile, found {len(tmp_paths)}: \n{pprint.pformat(tmp_paths)}")
 
-            if dst_path.suffix == tmp_path.suffix:
-                gfo.move(tmp_path, dst_path)
-            else:
-                logger.info(f"Convert tmp file to {dst_path}")
-                gfo.makevalid(tmp_path, dst_path)
+            if str(dst_path) != str(tmp_path):
+                if dst_path.suffix == tmp_path.suffix:
+                    gfo.move(tmp_path, dst_path)
+                else:
+                    logger.info(f"Convert tmp file to {dst_path}")
+                    gfo.makevalid(tmp_path, dst_path)
         finally:
             if tmp_dir.exists():
                 shutil.rmtree(tmp_dir)
