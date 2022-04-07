@@ -6,9 +6,11 @@ Module to benchmark geopandas operations.
 from datetime import datetime
 import logging
 import multiprocessing
+import os
 from pathlib import Path
 
 import dask_geopandas as dgpd
+import geofileops as gfo
 from geofileops.util import geoseries_util
 import pyogrio
 
@@ -42,11 +44,11 @@ def buffer(tmp_dir: Path) -> RunResult:
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # Buffer
-    start_time_buffer = datetime.now()
+    start_time_operation = datetime.now()
     dgdf = dgpd.from_geopandas(gdf, npartitions=multiprocessing.cpu_count())
     dgdf["geometry"] = dgdf["geometry"].buffer(distance=1, resolution=5).compute()
     assert isinstance(dgdf, dgpd.GeoDataFrame)
-    logger.info(f"time for buffer: {(datetime.now()-start_time_buffer).total_seconds()}")
+    logger.info(f"time for buffer: {(datetime.now()-start_time_operation).total_seconds()}")
     
     # Write to output file
     start_time_write = datetime.now()
@@ -91,12 +93,12 @@ def dissolve(tmp_dir: Path) -> RunResult:
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # dissolve
-    start_time_dissolve = datetime.now()
+    start_time_operation = datetime.now()
     dgdf = dgpd.from_geopandas(gdf, npartitions=multiprocessing.cpu_count())
     dgdf = dgdf.dissolve(split_out=multiprocessing.cpu_count())   # type: ignore
     dgdf = dgdf.explode()
     result_gdf = dgdf.compute()
-    logger.info(f"time for dissolve: {(datetime.now()-start_time_dissolve).total_seconds()}")
+    logger.info(f"time for dissolve: {(datetime.now()-start_time_operation).total_seconds()}")
     
     # Write to output file
     start_time_write = datetime.now()
@@ -130,12 +132,12 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # dissolve
-    start_time_dissolve = datetime.now()
+    start_time_operation = datetime.now()
     dgdf = dgpd.from_geopandas(gdf, npartitions=multiprocessing.cpu_count())
     dgdf = dgdf.dissolve(by="GEWASGROEP", split_out=multiprocessing.cpu_count())  # type: ignore
     dgdf = dgdf.explode()
     result_gdf = dgdf.compute()
-    logger.info(f"time for dissolve: {(datetime.now()-start_time_dissolve).total_seconds()}")
+    logger.info(f"time for dissolve: {(datetime.now()-start_time_operation).total_seconds()}")
     
     # Write to output file
     start_time_write = datetime.now()
@@ -164,6 +166,44 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     output_path.unlink()
     return result
 
+def join_by_location_intersects(tmp_dir: Path) -> RunResult:
+    # Init-
+    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+
+    ### Go! ###
+    # Read input files
+    start_time = datetime.now()
+    input1_gdf = pyogrio.read_dataframe(input1_path)
+    input2_gdf = pyogrio.read_dataframe(input2_path)
+    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    
+    # intersect
+    start_time_operation = datetime.now()
+    input1_dgdf = dgpd.from_geopandas(input1_gdf, npartitions=multiprocessing.cpu_count())
+    joined_dgdf = dgpd.sjoin(input1_dgdf, input2_gdf, predicate="intersects")
+    result_gdf = joined_dgdf.compute()
+    logger.info(f"time for intersect: {(datetime.now()-start_time_operation).total_seconds()}")
+
+    # Write to output file
+    start_time_write = datetime.now()
+    output_path = tmp_dir / f"{input1_path.stem}_inters_{input2_path.stem}_{_get_package()}.gpkg"
+    pyogrio.write_dataframe(result_gdf, output_path, layer=output_path.stem, driver="GPKG")
+    
+    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    result = RunResult(
+            package=_get_package(), 
+            package_version=_get_version(),
+            operation="join_by_location_intersects",
+            secs_taken=(datetime.now()-start_time).total_seconds(),
+            operation_descr="join_by_location_intersects between 2 agri parcel layers BEFL (2*~500.000 polygons)",
+            run_details={"nb_cpu": multiprocessing.cpu_count()})
+
+    # Cleanup and return
+    logger.info(f"nb features in result: {gfo.get_layerinfo(output_path).featurecount}")
+    output_path.unlink()
+    return result
+
 """
 def intersect(tmp_dir: Path) -> RunResult:
     
@@ -179,10 +219,10 @@ def intersect(tmp_dir: Path) -> RunResult:
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # intersect
-    start_time_intersect = datetime.now()
+    start_time_operation = datetime.now()
     input1_dgdf = dgpd.from_geopandas(input1_gdf, npartitions=multiprocessing.cpu_count())
     result_gdf = input1_dgdf.overlay(input2_gdf, how="intersection")
-    logger.info(f"time for intersect: {(datetime.now()-start_time_intersect).total_seconds()}")
+    logger.info(f"time for intersect: {(datetime.now()-start_time_operation).total_seconds()}")
 
     # Write to output file
     start_time_write = datetime.now()
