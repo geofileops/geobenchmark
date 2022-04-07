@@ -154,7 +154,7 @@ def save_chart(
 
     ### Set different markers + print labels ###
     # Set different markers for each line + get mn/max values + print labels
-    markers = ("+", ".", "o", "*")
+    markers = ("+", ".", "o", "*", "v", "^", "<", ">", "1", "2", "3", "4")
     max_y_value = None
     min_y_value = None
     

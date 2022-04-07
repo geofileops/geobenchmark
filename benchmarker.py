@@ -61,8 +61,11 @@ class RunResult:
         return f"{self.__class__}({self.__dict__})"
 
 def run_benchmarks(
-        modules_to_run: Optional[List[str]] = None,
-        functions_to_run: Optional[List[str]] = None):
+        benchmarks_subdir: str = "benchmarks",
+        results_subdir: str = "results",
+        results_filename: str = "benchmark_results.csv",
+        modules: Optional[List[str]] = None,
+        functions: Optional[List[str]] = None):
         
     # Init logging
     logging.basicConfig(
@@ -74,49 +77,54 @@ def run_benchmarks(
     logger.info(f"tmpdir: {tmp_dir}")
     tmp_dir.mkdir(parents=True, exist_ok=True)
 
-    benchmarks_dir = Path(__file__).parent / "benchmarks"
+    benchmarks_dir = Path(__file__).parent / benchmarks_subdir
     results = []
     for file in benchmarks_dir.glob("benchmarks_*.py"):
         module_name = file.stem
         if (not module_name.startswith("_")) and (module_name not in globals()):
-            if modules_to_run is not None and module_name not in modules_to_run:
+            if modules is not None and module_name not in modules:
                 # Benchmark whitelist specified, and this one isn't in it
-                logger.info(f"module {module_name} skipped, because not in modules_to_run: {modules_to_run}")
+                logger.info(f"module {module_name} skipped, because not in modules_to_run: {modules}")
                 continue
 
-            benchmark_implementation = importlib.import_module(f"benchmarks.{module_name}", __package__)
+            benchmark_implementation = importlib.import_module(f"{benchmarks_subdir}.{module_name}", __package__)
 
             # Run the functions in this benchmark
-            functions = inspect.getmembers(benchmark_implementation, inspect.isfunction)
-            for function_name, function in functions:
+            available_functions = inspect.getmembers(benchmark_implementation, inspect.isfunction)
+            for function_name, function in available_functions:
                 if function_name.startswith("_"):
                     continue
-                if functions_to_run is not None and function_name not in functions_to_run:
+                if functions is not None and function_name not in functions:
                     # Function whitelist specified, and this one isn't in it
-                    logger.info(f"function {function_name} skipped, because not in functions_to_run: {functions_to_run}")
+                    logger.info(f"function {function_name} skipped, because not in functions_to_run: {functions}")
                     continue
 
-                # Run the operation benchmark
-                logger.info(f"benchmarks.{module_name}.{function_name} start")
-                result = function(tmp_dir=tmp_dir)
-                if result is not None and isinstance(result, RunResult) is True:
-                    logger.info(f"benchmarks.{module_name}.{function_name} ready in {result.secs_taken:.2f} s")
-                    results.append(result)
-                else:
-                    logger.warning(f"benchmarks.{module_name}.{function_name} ignored: instead of a RunResult it returned {result}")                            
+                # Run the benchmark function
+                logger.info(f"{benchmarks_subdir}.{module_name}.{function_name} start")
+                function_results = function(tmp_dir=tmp_dir)
+                if isinstance(function_results, List) is False:
+                    function_results = [function_results]
+                for function_result in function_results:
+                    if isinstance(function_result, RunResult) is True:
+                        logger.info(f"{benchmarks_subdir}.{module_name}.{function_name} ready in {function_result.secs_taken:.2f} s")
+                        results.append(function_result)
+                    else:
+                        logger.warning(f"{benchmarks_subdir}.{module_name}.{function_name} ignored: instead of a RunResult it returned {function_result}")                            
                             
     # Add results to csv file
-    results_path = Path(__file__).resolve().parent / "results/benchmark_results.csv"
-    results_dictlist = [vars(result) for result in results]
-    results_df = pd.DataFrame(results_dictlist)
-    if not results_path.exists():
-        results_df.to_csv(results_path, index=False)
-    else:
-        results_df.to_csv(results_path, index=False, mode="a", header=False)
+    if len(results) > 0:
+        results_dir = Path(__file__).resolve().parent / results_subdir
+        results_dir.mkdir(parents=True, exist_ok=True)
+        results_path = results_dir / results_filename
+        results_dictlist = [vars(result) for result in results]
+        results_df = pd.DataFrame(results_dictlist)
+        if not results_path.exists():
+            results_df.to_csv(results_path, index=False)
+        else:
+            results_df.to_csv(results_path, index=False, mode="a", header=False)
 
-    # Generate reports
-    output_dir = Path(__file__).resolve().parent / "results"
-    reporter.generate_reports(results_path, output_dir)
+        # Generate reports
+        reporter.generate_reports(results_path, output_dir=results_dir)
 
 if __name__ == "__main__":
     run_benchmarks()
