@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 
 import dask_geopandas as dgpd
+from dask.distributed import Client, LocalCluster
 import geofileops as gfo
 from geofileops.util import geoseries_util
 import pyogrio
@@ -81,8 +82,57 @@ def buffer(tmp_dir: Path) -> RunResult:
 
     return result
 
-def dissolve(tmp_dir: Path) -> RunResult:
+def _clip(tmp_dir: Path) -> RunResult:
+    """
+    On the current test datasets, clip with dask-geopandas crashes with memory issues,
+    so no use to activate benchmark.
+    """
+
+    # Clip operation always crashes with memory issues in dask-geopandas
+    # TODO: try using a less complex clip layer
+
+    ### Init ###
+    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+    client = Client(LocalCluster(
+            n_workers=multiprocessing.cpu_count(), 
+            threads_per_worker=1,
+            memory_limit="1GB"))
+
+    ### Go! ###
+    # Read input files
+    start_time = datetime.now()
+    input1_gdf = pyogrio.read_dataframe(input1_path)
+    input2_gdf = pyogrio.read_dataframe(input2_path)
+    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
+    # Apply operation
+    start_time_operation = datetime.now()
+    input1_dgdf = dgpd.from_geopandas(input1_gdf, npartitions=multiprocessing.cpu_count())
+    result_dgdf = dgpd.clip(input1_dgdf, input2_gdf, keep_geom_type=True)
+    result_gdf = result_dgdf.compute()
+    logger.info(f"time for operation: {(datetime.now()-start_time_operation).total_seconds()}")
+
+    # Write to output file
+    start_time_write = datetime.now()
+    # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
+    #result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    output_path = tmp_dir / f"{input1_path.stem}_clip_{input2_path.stem}_{_get_package()}.gpkg"
+    pyogrio.write_dataframe(result_gdf, output_path, layer=output_path.stem, driver="GPKG")
+    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    secs_taken = (datetime.now()-start_time).total_seconds()
+    result = RunResult(
+            package=_get_package(), 
+            package_version=_get_version(),
+            operation='clip', 
+            secs_taken=secs_taken,
+            operation_descr="clip between 2 agri parcel layers BEFL (2*~500.000 polygons)")
+    
+    # Cleanup and return
+    #output_path.unlink()
+    return result
+
+def dissolve(tmp_dir: Path) -> RunResult: 
     ### Init ###
     input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     
@@ -205,8 +255,8 @@ def join_by_location_intersects(tmp_dir: Path) -> RunResult:
     return result
 
 """
-def intersect(tmp_dir: Path) -> RunResult:
-    
+def intersection(tmp_dir: Path) -> RunResult:
+    # Intersection operation is not yet supported in dask-geopandas
     ### Init ###
     input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
@@ -218,11 +268,11 @@ def intersect(tmp_dir: Path) -> RunResult:
     input2_gdf = pyogrio.read_dataframe(input2_path)
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
-    # intersect
-    start_time_operation = datetime.now()
+    # intersection
+    start_time_intersection = datetime.now()
     input1_dgdf = dgpd.from_geopandas(input1_gdf, npartitions=multiprocessing.cpu_count())
     result_gdf = input1_dgdf.overlay(input2_gdf, how="intersection")
-    logger.info(f"time for intersect: {(datetime.now()-start_time_operation).total_seconds()}")
+    logger.info(f"time for intersection: {(datetime.now()-start_time_intersection).total_seconds()}")
 
     # Write to output file
     start_time_write = datetime.now()
@@ -235,9 +285,9 @@ def intersect(tmp_dir: Path) -> RunResult:
     result = RunResult(
             package=_get_package(), 
             package_version=_get_version(),
-            operation='intersect', 
+            operation='intersection', 
             secs_taken=secs_taken,
-            operation_descr="intersect between 2 agri parcel layers BEFL (2*~500.000 polygons)")
+            operation_descr="intersection between 2 agri parcel layers BEFL (2*~500.000 polygons)")
     
     # Cleanup and return
     output_path.unlink()
