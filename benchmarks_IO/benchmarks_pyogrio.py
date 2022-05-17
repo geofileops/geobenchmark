@@ -30,29 +30,29 @@ def _get_package() -> str:
 def _get_version() -> str:
     return f"{pyogrio.__version__}".replace("v", "")
 
-class set_env_tmp(object):
-    def __init__(self, name: str, value: str):
-        self.value_backup = None
-        self.name = name
-        self.value = value
+class set_env_variables(object):
+    def __init__(self, env_variables_to_set: dict):
+        self.env_variables_backup = {}
+        self.env_variables_to_set = env_variables_to_set
     def __enter__(self):
         # Only if a name and value is specified...
-        if self.name is not None and self.value is not None:
+        for name, value in self.env_variables_to_set.items():
             # If the environment variable is already defined, make backup
-            if self.name in os.environ:
-                self.value_backup = os.environ[self.name]
+            if name in os.environ:
+                self.env_variables_backup[name] = os.environ[name]
 
             # Set env variable to value
-            os.environ[self.name] = self.value
+            os.environ[name] = value
     def __exit__(self, type, value, traceback):
-        if self.value is not None and self.value is not None:
-            if self.value_backup is not None:
-                # Recover backed up value
-                os.environ[self.name] = self.value_backup
-            else:
-                # Delete env variable
-                if self.name in os.environ:
-                    del os.environ[self.name]                
+        # Set variables that were backed up back to original value
+        for name, value in self.env_variables_backup.items():
+            # Recover backed up value
+            os.environ[name] = value
+        # For variables without backup, remove them
+        for name, value in self.env_variables_to_set.items():
+            if name not in self.env_variables_backup:
+                if name in os.environ:
+                    del os.environ[name]
 
 def write_dataframe(tmp_dir: Path) -> List[RunResult]:
     # Init
@@ -99,7 +99,7 @@ def write_dataframe(tmp_dir: Path) -> List[RunResult]:
     for combination_id, sqlite_pragmas in enumerate(sqlite_pragma_combinations):
         sqlite_pragma_str = ",".join(sqlite_pragmas)
         start_time = datetime.now()
-        with set_env_tmp("OGR_SQLITE_PRAGMA", sqlite_pragma_str):
+        with set_env_variables({"OGR_SQLITE_PRAGMA": sqlite_pragma_str}):
             pyogrio.write_dataframe(input_gdf, output_path, layer=output_path.stem, driver="GPKG")
 
         secs_taken = (datetime.now()-start_time).total_seconds()
