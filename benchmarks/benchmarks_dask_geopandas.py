@@ -81,6 +81,14 @@ def buffer(tmp_dir: Path) -> RunResult:
     return result
 
 def _clip(tmp_dir: Path) -> RunResult:
+    """
+    On the current test datasets, clip with dask-geopandas crashes with memory issues,
+    so no use to activate benchmark.
+    """
+
+    # Clip operation always crashes with memory issues in dask-geopandas
+    # TODO: try using a less complex clip layer
+
     ### Init ###
     input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
@@ -97,11 +105,11 @@ def _clip(tmp_dir: Path) -> RunResult:
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
     # Apply operation
-    start_time_clip = datetime.now()
+    start_time_operation = datetime.now()
     input1_dgdf = dgpd.from_geopandas(input1_gdf, npartitions=multiprocessing.cpu_count())
     result_dgdf = dgpd.clip(input1_dgdf, input2_gdf, keep_geom_type=True)
     result_gdf = result_dgdf.compute()
-    logger.info(f"time for intersect: {(datetime.now()-start_time_clip).total_seconds()}")
+    logger.info(f"time for operation: {(datetime.now()-start_time_operation).total_seconds()}")
 
     # Write to output file
     start_time_write = datetime.now()
@@ -207,8 +215,8 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     return result
 
 """
-def intersect(tmp_dir: Path) -> RunResult:
-    
+def intersection(tmp_dir: Path) -> RunResult:
+    # Intersection operation is not yet supported in dask-geopandas
     ### Init ###
     input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
@@ -220,11 +228,11 @@ def intersect(tmp_dir: Path) -> RunResult:
     input2_gdf = pyogrio.read_dataframe(input2_path)
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
-    # intersect
-    start_time_intersect = datetime.now()
+    # intersection
+    start_time_intersection = datetime.now()
     input1_dgdf = dgpd.from_geopandas(input1_gdf, npartitions=multiprocessing.cpu_count())
     result_gdf = input1_dgdf.overlay(input2_gdf, how="intersection")
-    logger.info(f"time for intersect: {(datetime.now()-start_time_intersect).total_seconds()}")
+    logger.info(f"time for intersection: {(datetime.now()-start_time_intersection).total_seconds()}")
 
     # Write to output file
     start_time_write = datetime.now()
@@ -237,9 +245,9 @@ def intersect(tmp_dir: Path) -> RunResult:
     result = RunResult(
             package=_get_package(), 
             package_version=_get_version(),
-            operation='intersect', 
+            operation='intersection', 
             secs_taken=secs_taken,
-            operation_descr="intersect between 2 agri parcel layers BEFL (2*~500.000 polygons)")
+            operation_descr="intersection between 2 agri parcel layers BEFL (2*~500.000 polygons)")
     
     # Cleanup and return
     output_path.unlink()

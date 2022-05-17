@@ -60,7 +60,11 @@ def buffer(tmp_dir: Path) -> RunResult:
     output_path.unlink()
     return result
 
-def _clip(tmp_dir: Path) -> RunResult: 
+def _clip(tmp_dir: Path) -> RunResult:
+    """
+    On the current test datasets, clip with geopandas runs for days without result,
+    so no use to activate benchmark
+    """
     ### Init ###
     input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
@@ -72,10 +76,10 @@ def _clip(tmp_dir: Path) -> RunResult:
     input2_gdf = gpd.read_file(input2_path)
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
-    # intersect
-    start_time_intersect = datetime.now()
+    # clip
+    start_time_operation = datetime.now()
     result_gdf = gpd.clip(input1_gdf, input2_gdf, keep_geom_type=True)
-    logger.info(f"time for intersect: {(datetime.now()-start_time_intersect).total_seconds()}")
+    logger.info(f"time for clip: {(datetime.now()-start_time_operation).total_seconds()}")
 
     # Write to output file
     start_time_write = datetime.now()
@@ -162,7 +166,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     output_path.unlink()
     return result
 
-def intersect(tmp_dir: Path) -> RunResult:
+def intersection(tmp_dir: Path) -> RunResult:
     ### Init ###
     input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
@@ -174,10 +178,10 @@ def intersect(tmp_dir: Path) -> RunResult:
     input2_gdf = gpd.read_file(input2_path)
     logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
     
-    # intersect
-    start_time_intersect = datetime.now()
+    # intersection
+    start_time_operation = datetime.now()
     result_gdf = input1_gdf.overlay(input2_gdf, how="intersection")
-    logger.info(f"time for intersect: {(datetime.now()-start_time_intersect).total_seconds()}")
+    logger.info(f"time for intersection: {(datetime.now()-start_time_operation).total_seconds()}")
 
     # Write to output file
     start_time_write = datetime.now()
@@ -190,9 +194,46 @@ def intersect(tmp_dir: Path) -> RunResult:
     result = RunResult(
             package=_get_package(), 
             package_version=_get_version(),
-            operation='intersect', 
+            operation='intersection', 
             secs_taken=secs_taken,
-            operation_descr="intersect between 2 agri parcel layers BEFL (2*~500.000 polygons)")
+            operation_descr="intersection between 2 agri parcel layers BEFL (2*~500.000 polygons)")
+    
+    # Cleanup and return
+    output_path.unlink()
+    return result
+
+
+def union(tmp_dir: Path) -> RunResult:
+    ### Init ###
+    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+        
+    ### Go! ###
+    # Read input files
+    start_time = datetime.now()
+    input1_gdf = gpd.read_file(input1_path)
+    input2_gdf = gpd.read_file(input2_path)
+    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    
+    # union
+    start_time_union = datetime.now()
+    result_gdf = input1_gdf.overlay(input2_gdf, how="union")
+    logger.info(f"time for union: {(datetime.now()-start_time_union).total_seconds()}")
+
+    # Write to output file
+    start_time_write = datetime.now()
+    # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
+    result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    output_path = tmp_dir / f"{input1_path.stem}_union_{input2_path.stem}.gpkg"
+    result_gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
+    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    secs_taken = (datetime.now()-start_time).total_seconds()
+    result = RunResult(
+            package=_get_package(), 
+            package_version=_get_version(),
+            operation='union', 
+            secs_taken=secs_taken,
+            operation_descr="union between 2 agri parcel layers BEFL (2*~500.000 polygons)")
     
     # Cleanup and return
     output_path.unlink()
