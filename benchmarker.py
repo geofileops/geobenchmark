@@ -14,7 +14,7 @@ from typing import List, Optional
 
 import pandas as pd
 
-# Add path so the benchmark packages are found 
+# Add path so the benchmark packages are found
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import reporter
 
@@ -28,15 +28,19 @@ logger = logging.getLogger(__name__)
 # The real work
 ################################################################################
 
+
 class RunResult:
-    """ The result of a benchmark run. """
-    def __init__(self, 
-            package: str,
-            package_version: str,
-            operation: str,
-            operation_descr: str,
-            secs_taken: float,
-            run_details: Optional[dict] = None):
+    """The result of a benchmark run."""
+
+    def __init__(
+        self,
+        package: str,
+        package_version: str,
+        operation: str,
+        operation_descr: str,
+        secs_taken: float,
+        run_details: Optional[dict] = None,
+    ):
         """
         Constructor for a RunResult.
 
@@ -56,21 +60,25 @@ class RunResult:
         self.operation_descr = operation_descr
         self.secs_taken = secs_taken
         self.run_details = run_details
-        
+
     def __repr__(self):
         return f"{self.__class__}({self.__dict__})"
 
+
 def run_benchmarks(
-        benchmarks_subdir: str = "benchmarks",
-        results_subdir: str = "results",
-        results_filename: str = "benchmark_results.csv",
-        modules: Optional[List[str]] = None,
-        functions: Optional[List[str]] = None):
-        
+    benchmarks_subdir: str = "benchmarks",
+    results_subdir: str = "results",
+    results_filename: str = "benchmark_results.csv",
+    modules: Optional[List[str]] = None,
+    functions: Optional[List[str]] = None,
+):
+
     # Init logging
     logging.basicConfig(
-            format="%(asctime)s.%(msecs)03d|%(levelname)s|%(name)s|%(message)s", 
-            datefmt="%H:%M:%S", level=logging.INFO)
+        format="%(asctime)s.%(msecs)03d|%(levelname)s|%(name)s|%(message)s",
+        datefmt="%H:%M:%S",
+        level=logging.INFO,
+    )
 
     # Discover and run all benchmark implementations
     tmp_dir = Path(tempfile.gettempdir()) / "geobenchmark"
@@ -84,19 +92,27 @@ def run_benchmarks(
         if (not module_name.startswith("_")) and (module_name not in globals()):
             if modules is not None and module_name not in modules:
                 # Benchmark whitelist specified, and this one isn't in it
-                logger.info(f"module {module_name} skipped, because not in modules_to_run: {modules}")
+                logger.info(
+                    f"skip module {module_name}: not in modules: {modules}"
+                )
                 continue
 
-            benchmark_implementation = importlib.import_module(f"{benchmarks_subdir}.{module_name}", __package__)
+            benchmark_implementation = importlib.import_module(
+                f"{benchmarks_subdir}.{module_name}", __package__
+            )
 
             # Run the functions in this benchmark
-            available_functions = inspect.getmembers(benchmark_implementation, inspect.isfunction)
+            available_functions = inspect.getmembers(
+                benchmark_implementation, inspect.isfunction
+            )
             for function_name, function in available_functions:
                 if function_name.startswith("_"):
                     continue
                 if functions is not None and function_name not in functions:
                     # Function whitelist specified, and this one isn't in it
-                    logger.info(f"function {function_name} skipped, because not in functions_to_run: {functions}")
+                    logger.info(
+                        f"skip function {function_name}: not in functions: {functions}"
+                    )
                     continue
 
                 # Run the benchmark function
@@ -106,11 +122,18 @@ def run_benchmarks(
                     function_results = [function_results]
                 for function_result in function_results:
                     if isinstance(function_result, RunResult) is True:
-                        logger.info(f"{benchmarks_subdir}.{module_name}.{function_name} ready in {function_result.secs_taken:.2f} s")
+                        logger.info(
+                            f"{benchmarks_subdir}.{module_name}.{function_name} "
+                            f"ready in {function_result.secs_taken:.2f} s"
+                        )
                         results.append(function_result)
                     else:
-                        logger.warning(f"{benchmarks_subdir}.{module_name}.{function_name} ignored: instead of a RunResult it returned {function_result}")                            
-                            
+                        logger.warning(
+                            f"{benchmarks_subdir}.{module_name}.{function_name} "
+                            "ignored: instead of a RunResult it returned "
+                            f"{function_result}"
+                        )
+
     # Add results to csv file
     if len(results) > 0:
         results_dir = Path(__file__).resolve().parent / results_subdir
@@ -125,6 +148,7 @@ def run_benchmarks(
 
         # Generate reports
         reporter.generate_reports(results_path, output_dir=results_dir)
+
 
 if __name__ == "__main__":
     run_benchmarks()
