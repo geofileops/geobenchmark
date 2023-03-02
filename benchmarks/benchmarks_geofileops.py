@@ -5,6 +5,7 @@ Module to benchmark geofileops operations.
 
 from datetime import datetime
 import logging
+import multiprocessing
 from pathlib import Path
 
 import geofileops as gfo
@@ -17,7 +18,6 @@ from benchmarks import testdata
 ################################################################################
 
 logger = logging.getLogger(__name__)
-nb_parallel = 12
 
 ################################################################################
 # The real work
@@ -39,14 +39,14 @@ def buffer(tmp_dir: Path) -> RunResult:
     # Go!
     start_time = datetime.now()
     output_path = tmp_dir / f"{input_path.stem}_buf.gpkg"
-    gfo.buffer(input_path, output_path, distance=1, force=True, nb_parallel=nb_parallel)
+    gfo.buffer(input_path, output_path, distance=1, force=True)
     result = RunResult(
         package=_get_package(),
         package_version=_get_version(),
         operation="buffer",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="buffer on agri parcel layer BEFL (~500k polygons)",
-        run_details={"nb_cpu": nb_parallel},
+        run_details={"nb_cpu": multiprocessing.cpu_count()},
     )
 
     # Cleanup and return
@@ -70,7 +70,6 @@ def _clip(tmp_dir: Path) -> RunResult:
         clip_path=input2_path,
         output_path=output_path,
         force=True,
-        nb_parallel=nb_parallel,
     )
     result = RunResult(
         package="geofileops",
@@ -78,7 +77,7 @@ def _clip(tmp_dir: Path) -> RunResult:
         operation="clip",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="clip of 2 agri parcel layers BEFL (2*~500k polygons)",
-        run_details={"nb_cpu": nb_parallel},
+        run_details={"nb_cpu": multiprocessing.cpu_count()},
     )
 
     # Cleanup and return
@@ -98,7 +97,6 @@ def dissolve_nogroupby(tmp_dir: Path) -> RunResult:
         output_path=output_path,
         explodecollections=True,
         force=True,
-        nb_parallel=nb_parallel,
     )
     result = RunResult(
         package=_get_package(),
@@ -106,7 +104,7 @@ def dissolve_nogroupby(tmp_dir: Path) -> RunResult:
         operation="dissolve",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="dissolve on agri parcels BEFL (~500k polygons)",
-        run_details={"nb_cpu": nb_parallel},
+        run_details={"nb_cpu": multiprocessing.cpu_count()},
     )
 
     # Cleanup and return
@@ -127,7 +125,6 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
         groupby_columns=["GEWASGROEP"],
         explodecollections=True,
         force=True,
-        nb_parallel=nb_parallel,
     )
     result = RunResult(
         package=_get_package(),
@@ -137,7 +134,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
         operation_descr=(
             "dissolve on agri parcels BEFL (~500k polygons), groupby=[GEWASGROEP]"
         ),
-        run_details={"nb_cpu": nb_parallel},
+        run_details={"nb_cpu": multiprocessing.cpu_count()},
     )
 
     # Cleanup and return
@@ -158,7 +155,6 @@ def intersection(tmp_dir: Path) -> RunResult:
         input2_path=input2_path,
         output_path=output_path,
         force=True,
-        nb_parallel=nb_parallel,
     )
     result = RunResult(
         package=_get_package(),
@@ -166,7 +162,7 @@ def intersection(tmp_dir: Path) -> RunResult:
         operation="intersection",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="intersection of 2 agri parcel layers BEFL (2*~500k polygons)",
-        run_details={"nb_cpu": nb_parallel},
+        run_details={"nb_cpu": multiprocessing.cpu_count()},
     )
 
     # Cleanup and return
@@ -187,7 +183,6 @@ def union(tmp_dir: Path) -> RunResult:
         input2_path=input2_path,
         output_path=output_path,
         force=True,
-        nb_parallel=nb_parallel,
     )
     result = RunResult(
         package=_get_package(),
@@ -195,7 +190,7 @@ def union(tmp_dir: Path) -> RunResult:
         operation="union",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="union of 2 agri parcel layers BEFL (2*~500k polygons)",
-        run_details={"nb_cpu": nb_parallel},
+        run_details={"nb_cpu": multiprocessing.cpu_count()},
     )
 
     # Cleanup and return
