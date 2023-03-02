@@ -1,8 +1,16 @@
 import benchmarker
 
-if __name__ == "__main__":
+
+def main():
     benchmarker.run_benchmarks(modules=["benchmarks_geopandas_pyogrio"])
 
+    return
+
     # Only run specific benchmark function(s)
-    # benchmarker.run_benchmarks(modules=["benchmarks_geopandas_pyogrio"], functions=["dissolve_groupby"])
-    # benchmarker.run_benchmarks(modules=["benchmarks_geopandas_pyogrio"], functions=["buffer"])
+    benchmarker.run_benchmarks(
+        modules=["benchmarks_geopandas_pyogrio"], functions=["buffer"]
+    )
+
+
+if __name__ == "__main__":
+    main()
