@@ -35,6 +35,17 @@ def _get_version() -> str:
     return dgpd.__version__.replace("v", "")
 
 
+def get_nb_parallel() -> int:
+    nb_parallel = 12
+    nb_cores = multiprocessing.cpu_count()
+    if nb_cores < nb_parallel:
+        logger.warning(
+            f"nb_parallel specified ({nb_parallel}) > nb logical cores available "
+            f"({nb_cores})"
+        )
+    return nb_parallel
+
+
 def buffer(tmp_dir: Path) -> RunResult:
     # Init
     input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
@@ -47,7 +58,7 @@ def buffer(tmp_dir: Path) -> RunResult:
 
     # Buffer
     start_time_buffer = datetime.now()
-    dgdf = dgpd.from_geopandas(gdf, npartitions=multiprocessing.cpu_count())
+    dgdf = dgpd.from_geopandas(gdf, npartitions=get_nb_parallel())
     dgdf["geometry"] = dgdf["geometry"].buffer(distance=1, resolution=5).compute()
     assert isinstance(dgdf, dgpd.GeoDataFrame)
     logger.info(
@@ -79,7 +90,7 @@ def buffer(tmp_dir: Path) -> RunResult:
         operation="buffer",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="buffer agri parcels BEFL (~500k polygons)",
-        run_details={"nb_cpu": multiprocessing.cpu_count()},
+        run_details={"nb_cpu": get_nb_parallel()},
     )
 
     # Cleanup
@@ -103,7 +114,7 @@ def _clip(tmp_dir: Path) -> RunResult:
     input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
     client = Client(
         LocalCluster(
-            n_workers=multiprocessing.cpu_count(),
+            n_workers=get_nb_parallel(),
             threads_per_worker=1,
             memory_limit="1GB",
         )
@@ -119,7 +130,7 @@ def _clip(tmp_dir: Path) -> RunResult:
     # Apply operation
     start_time_op = datetime.now()
     input1_dgdf = dgpd.from_geopandas(
-        input1_gdf, npartitions=multiprocessing.cpu_count()
+        input1_gdf, npartitions=get_nb_parallel()
     )
     result_dgdf = dgpd.clip(input1_dgdf, input2_gdf, keep_geom_type=True)
     result_gdf = result_dgdf.compute()
@@ -162,8 +173,8 @@ def dissolve(tmp_dir: Path) -> RunResult:
 
     # dissolve
     start_time_dissolve = datetime.now()
-    dgdf = dgpd.from_geopandas(gdf, npartitions=multiprocessing.cpu_count())
-    dgdf = dgdf.dissolve(split_out=multiprocessing.cpu_count())  # type: ignore
+    dgdf = dgpd.from_geopandas(gdf, npartitions=get_nb_parallel())
+    dgdf = dgdf.dissolve(split_out=get_nb_parallel())  # type: ignore
     dgdf = dgdf.explode()
     result_gdf = dgdf.compute()
     logger.info(
@@ -207,9 +218,9 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
 
     # dissolve
     start_time_dissolve = datetime.now()
-    dgdf = dgpd.from_geopandas(gdf, npartitions=multiprocessing.cpu_count())
+    dgdf = dgpd.from_geopandas(gdf, npartitions=get_nb_parallel())
     assert isinstance(dgdf, dgpd.GeoDataFrame)
-    dgdf = dgdf.dissolve(by="GEWASGROEP", split_out=multiprocessing.cpu_count())
+    dgdf = dgdf.dissolve(by="GEWASGROEP", split_out=get_nb_parallel())
     dgdf = dgdf.explode()
     result_gdf = dgdf.compute()
     logger.info(
@@ -266,7 +277,7 @@ def intersection(tmp_dir: Path) -> RunResult:
     # intersection
     start_time_op = datetime.now()
     input1_dgdf = dgpd.from_geopandas(
-        input1_gdf, npartitions=multiprocessing.cpu_count()
+        input1_gdf, npartitions=nb_parallel
     )
     result_gdf = input1_dgdf.overlay(input2_gdf, how="intersection")
     logger.info(
