@@ -1,5 +1,9 @@
-
 import benchmarker
 
-if __name__ == "__main__":
+
+def main():
     benchmarker.run_benchmarks()
+
+
+if __name__ == "__main__":
+    main()

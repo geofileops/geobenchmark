@@ -13,7 +13,7 @@ with a lot of caution!
 Especially the buffer benchmark is at the time of writing for 90% I/O bound 
 in geopandas!
 
-The test files used are not that large (eg. 500.000 polygons, 350 MB .gpkg), 
+The test files used are not that large (eg. 500k polygons, 350 MB .gpkg), 
 but try to strike a balance between being large enough to give an idea on 
 processing time to expect versus the time spent waiting for a benchmark to be 
 run. They also fit in the memory of most desktops, so this makes it possible 
@@ -21,6 +21,9 @@ to also benchmark libraries that don't support files too large to fit in
 memory. When using geofileops on really large .gpkg files (> 10 GB), obviously 
 the speed improvements become (even) more important. 
 
-The following chart shows the main results of the benchmark:
+The benchmarks ran on a Windows workstation and the libraries were constrained
+to use a maximum of 12 logical cores.
+
+The following chart shows the main results of the benchmark.
 
 ![Geo benchmark](results/GeoBenchmark.png)
