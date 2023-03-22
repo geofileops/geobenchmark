@@ -1,0 +1,5 @@
+run_datetime,package,package_version,operation,operation_descr,secs_taken,run_details
+2023-03-22 22:50:17.143933,geowombat,2.1.6,zonalstats,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,100.128567,{}
+2023-03-22 22:51:12.810491,pygeoprocessing,2.4.0,zonalstats,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,52.998522,{}
+2023-03-22 22:52:01.739550,rasterstats,0.18.0,zonalstats,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,46.805364,{}
+2023-03-22 23:05:01.739550,qgis(GUI),3.22.1,zonalstats,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,4.52,{}
