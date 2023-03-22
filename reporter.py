@@ -19,7 +19,6 @@ A4_SHORT_SIDE = 8.27
 
 
 def generate_reports(results_path: Path, output_dir: Path):
-
     benchmark_df = pd.read_csv(results_path)
 
     def format_run_details(input: dict) -> str:
@@ -155,23 +154,26 @@ def save_chart(
             f"df has non-numeric columns, so cannot be plotted: {non_numeric_columns}"
         )
 
-    # Init some things based on input
-    rot = 90
-
     # Prepare plot figure and axes
     fig, axs = plt.subplots(figsize=(size))
     # Make sure all x axis values are shown
     axs.set_xticks(range(len(df)))
     if yscale is not None:
-        plt.yscale(yscale)
+        plt.yscale(yscale)  # type: ignore
 
     # Plot
-    df.plot(ax=axs, kind=plot_kind, rot=rot, title=title, linestyle=linestyle)
+    df.plot(
+        ax=axs, kind=plot_kind, rot=90, title=title, linestyle=linestyle  # type: ignore
+    )
 
     # Show y axes as percentages is asked
     if y_value_formatter is not None:
-        axs.yaxis.set_major_formatter(plt.FuncFormatter(y_value_formatter.format))
-        axs.yaxis.set_minor_formatter(plt.FuncFormatter(y_value_formatter.format))
+        axs.yaxis.set_major_formatter(
+            plt.FuncFormatter(y_value_formatter.format)  # type: ignore
+        )
+        axs.yaxis.set_minor_formatter(
+            plt.FuncFormatter(y_value_formatter.format)  # type: ignore
+        )
 
     # Show grid lines if specified
     if gridlines is not None:
@@ -258,13 +260,13 @@ def save_chart(
     plt.tight_layout()
 
     # Save and open if wanted
-    fig.savefig(output_path)
+    fig.savefig(str(output_path))
     if open_output_file is True:
         os.startfile(output_path)
 
 
 if __name__ == "__main__":
-
-    results_path = Path(__file__).resolve().parent / "results/benchmark_results.csv"
-    output_dir = Path(__file__).resolve().parent / "results"
+    results_dir = Path(__file__).resolve().parent / "results"
+    results_path = results_dir / "benchmark_results.csv"
+    output_dir = results_dir
     generate_reports(results_path, output_dir)

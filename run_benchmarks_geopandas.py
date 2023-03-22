@@ -2,10 +2,15 @@ import benchmarker
 
 
 def main():
-    benchmarker.run_benchmarks(modules=["benchmarks_geopandas"])
+    debug = False
+    if debug:
+        # Only run specific benchmark function(s)
+        benchmarker.run_benchmarks(
+            modules=["benchmarks_geopandas"], functions=["buffer"]
+        )
+        return
 
-    # Only run specific benchmark function(s)
-    # benchmarker.run_benchmarks(modules=["benchmarks_geopandas"], functions=["buffer"])
+    benchmarker.run_benchmarks(modules=["benchmarks_geopandas"])
 
 
 if __name__ == "__main__":

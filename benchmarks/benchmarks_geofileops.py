@@ -11,7 +11,7 @@ from pathlib import Path
 import geofileops as gfo
 
 from benchmarker import RunResult
-from benchmarks import testdata
+import testdata
 
 ################################################################################
 # Some init
