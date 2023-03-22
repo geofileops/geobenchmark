@@ -11,7 +11,7 @@ from geofileops.util import geoseries_util
 import geopandas as gpd
 
 from benchmarker import RunResult
-from benchmarks import testdata
+import testdata
 
 ################################################################################
 # Some init
@@ -91,6 +91,7 @@ def _clip(tmp_dir: Path) -> RunResult:
     # Write to output file
     start_time_write = datetime.now()
     # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
+    assert isinstance(result_gdf.geometry, gpd.GeoSeries)
     result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
     output_path = tmp_dir / f"{input1_path.stem}_clip_{input2_path.stem}.gpkg"
     result_gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")

@@ -12,7 +12,7 @@ import geopandas as gpd
 import pyogrio
 
 from benchmarker import RunResult
-from benchmarks import testdata
+import testdata
 
 ################################################################################
 # Some init

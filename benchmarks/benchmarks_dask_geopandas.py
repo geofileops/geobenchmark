@@ -9,12 +9,13 @@ import multiprocessing
 from pathlib import Path
 
 import dask_geopandas as dgpd
-from dask.distributed import Client, LocalCluster
+
+# from dask.distributed import Client, LocalCluster
 from geofileops.util import geoseries_util
 import pyogrio
 
 from benchmarker import RunResult
-from benchmarks import testdata
+import testdata
 
 ################################################################################
 # Some init
@@ -59,7 +60,8 @@ def buffer(tmp_dir: Path) -> RunResult:
     # Buffer
     start_time_buffer = datetime.now()
     dgdf = dgpd.from_geopandas(gdf, npartitions=_get_nb_parallel())
-    dgdf["geometry"] = dgdf["geometry"].buffer(distance=1, resolution=5).compute()
+    assert isinstance(dgdf.geometry, dgpd.GeoSeries)
+    dgdf.geometry = dgdf.geometry.buffer(distance=1, resolution=5).compute()
     assert isinstance(dgdf, dgpd.GeoDataFrame)
     logger.info(
         f"time for buffer: {(datetime.now()-start_time_buffer).total_seconds()}"
@@ -112,6 +114,7 @@ def _clip(tmp_dir: Path) -> RunResult:
     # Init
     input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+    """
     client = Client(
         LocalCluster(
             n_workers=_get_nb_parallel(),
@@ -119,6 +122,7 @@ def _clip(tmp_dir: Path) -> RunResult:
             memory_limit="1GB",
         )
     )
+    """
 
     # Go!
     # Read input files
@@ -129,9 +133,7 @@ def _clip(tmp_dir: Path) -> RunResult:
 
     # Apply operation
     start_time_op = datetime.now()
-    input1_dgdf = dgpd.from_geopandas(
-        input1_gdf, npartitions=_get_nb_parallel()
-    )
+    input1_dgdf = dgpd.from_geopandas(input1_gdf, npartitions=_get_nb_parallel())
     result_dgdf = dgpd.clip(input1_dgdf, input2_gdf, keep_geom_type=True)
     result_gdf = result_dgdf.compute()
     logger.info(f"time for operation: {(datetime.now()-start_time_op).total_seconds()}")
