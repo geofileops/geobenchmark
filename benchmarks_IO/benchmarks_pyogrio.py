@@ -12,7 +12,7 @@ import pyogrio
 from typing import List
 
 from benchmarker import RunResult
-from benchmarks import testdata
+import testdata
 
 ################################################################################
 # Some init
