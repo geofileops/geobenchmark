@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Module to benchmark geopandas operations using pyogrio for IO.
+Module to benchmark zonalstats.
 """
 
 import logging

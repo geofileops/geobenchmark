@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Module to benchmark geopandas operations using pyogrio for IO.
+Module to benchmark zonalstats.
 """
 
 from datetime import datetime
@@ -67,7 +67,7 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
         RunResult(
             package=_get_package(),
             package_version=_get_version(),
-            operation="zonalstats",
+            operation="zonalstats_1band",
             secs_taken=secs_taken,
             operation_descr=(
                 f"zonalstats of agri parcels ({nb_poly} polygons) + S2 NDVI BEFL"
