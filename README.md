@@ -26,4 +26,4 @@ to use a maximum of 12 logical cores.
 
 The following chart shows the main results of the benchmark.
 
-![Geo benchmark](results/GeoBenchmark.png)
+![Geo benchmark](results_vector_ops/GeoBenchmark.png)
