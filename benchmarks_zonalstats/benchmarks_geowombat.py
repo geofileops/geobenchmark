@@ -34,7 +34,7 @@ def _get_version() -> str:
     return f"{gw.__version__}".replace("v", "")
 
 
-def zonalstats(tmp_dir: Path) -> List[RunResult]:
+def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
     # Init
     results = []
     vector_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
@@ -52,13 +52,13 @@ def zonalstats(tmp_dir: Path) -> List[RunResult]:
     # 10.000: 97s
     stats_df = None
     # with gw.config.update(sensor="bgr"):
+
+    # Remark: all bands are read, specifying only one band gives error?
     with gw.open(raster_path) as src:
         assert src is not None
-        stats_df = src.gw.extract(
-            str(vector_tmp_path), band_names=src.band.values.tolist()
-        )
+        stats_df = src.gw.extract(str(vector_tmp_path), bands=[1])
         # use pandas groupby to calc pixel mean
-        # stats_df = stats_df.groupby("id").mean()
+        stats_df = stats_df[["id", 1]].groupby("id").mean()
     # print(stats_df)
 
     secs_taken = (datetime.now() - start_time).total_seconds()
