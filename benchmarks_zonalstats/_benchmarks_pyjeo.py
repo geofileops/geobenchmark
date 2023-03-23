@@ -34,7 +34,7 @@ def _get_version() -> str:
     return f"{pyjeo.__version__}".replace("v", "")
 
 
-def zonalstats(tmp_dir: Path) -> List[RunResult]:
+def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
     # Init
     results = []
     vector_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)

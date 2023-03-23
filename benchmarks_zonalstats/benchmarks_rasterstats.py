@@ -34,7 +34,7 @@ def _get_version() -> str:
     return f"{rasterstats.__version__}".replace("v", "")
 
 
-def zonalstats(tmp_dir: Path) -> List[RunResult]:
+def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
     # Init
     results = []
     vector_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
@@ -50,7 +50,9 @@ def zonalstats(tmp_dir: Path) -> List[RunResult]:
     start_time = datetime.now()
     #  1.000: 10s
     # 10.000: 97s
-    stats = rasterstats.zonal_stats(str(vector_tmp_path), raster_path)
+    stats = list(rasterstats.gen_zonal_stats(
+        str(vector_tmp_path), raster_path, band=1, stats=["count", "min", "max", "mean"]
+    ))
     # print(stats)
 
     secs_taken = (datetime.now() - start_time).total_seconds()
