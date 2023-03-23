@@ -2,8 +2,8 @@ import benchmarker
 
 
 def main():
-    debug = False
-    if debug:
+    all_benchmarks = True
+    if not all_benchmarks:
         # Only run specific benchmark function(s)
         benchmarker.run_benchmarks(
             benchmarks_subdir="benchmarks_IO", results_subdir="results_IO",
