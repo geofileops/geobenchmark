@@ -10,7 +10,8 @@ def main():
             results_subdir="results_zonalstats",
             # modules=["benchmarks_rasterstats"],
             # modules=["benchmarks_pygeoops"],
-            modules=["benchmarks_geowombat"],
+            # modules=["benchmarks_geowombat"],
+            modules=["benchmarks_pyqgis"],
         )
         return
 
