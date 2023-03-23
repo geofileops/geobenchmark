@@ -5,9 +5,12 @@ dependencies:
   - python=3.10
   - pip
   # required
+  - dask-geopandas
   - geofileops
   - geopandas
-  - dask-geopandas
+  - geowombat
+  - pygeoprocessing
+  - rasterstats
   # linting
   - black
   - flake8
