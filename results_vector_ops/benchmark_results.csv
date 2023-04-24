@@ -54,8 +54,8 @@ run_datetime,package,package_version,operation,operation_descr,secs_taken,run_de
 2023-03-01 23:33:43.906780,geopandas_pyogrio,0.12.2_0.5.1,dissolve_groupby,"dissolve on agri parcels BEFL (~500k polygons), groupby=GEWASGROEP",477.952478,
 2023-03-01 23:37:30.560652,geopandas_pyogrio,0.12.2_0.5.1,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),225.410592,
 2023-03-02 00:05:24.172157,geopandas_pyogrio,0.12.2_0.5.1,union,union of 2 agri parcel layers BEFL (2*~500k polygons),1670.425448,
-2023-03-03 11:40:02.389863,geofileops,0.7.0a1,buffer,buffer on agri parcel layer BEFL (~500k polygons),30.152945,{'nb_cpu': 12}
-2023-03-03 11:40:52.634857,geofileops,0.7.0a1,dissolve_groupby,"dissolve on agri parcels BEFL (~500k polygons), groupby=[GEWASGROEP]",50.15664,{'nb_cpu': 12}
-2023-03-03 11:41:39.417980,geofileops,0.7.0a1,dissolve,dissolve on agri parcels BEFL (~500k polygons),46.743493,{'nb_cpu': 12}
-2023-03-03 11:42:50.566429,geofileops,0.7.0a1,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),71.061782,{'nb_cpu': 12}
-2023-03-03 11:46:38.596393,geofileops,0.7.0a1,union,union of 2 agri parcel layers BEFL (2*~500k polygons),227.939662,{'nb_cpu': 12}
+2023-04-24 12:38:11.527122,geofileops,0.7.0,buffer,buffer on agri parcel layer BEFL (~500k polygons),23.661584,{'nb_cpu': 12}
+2023-04-24 12:38:59.051779,geofileops,0.7.0,dissolve_groupby,"dissolve on agri parcels BEFL (~500k polygons), groupby=[GEWASGROEP]",47.450241,{'nb_cpu': 12}
+2023-04-24 12:39:44.238948,geofileops,0.7.0,dissolve,dissolve on agri parcels BEFL (~500k polygons),45.142223,{'nb_cpu': 12}
+2023-04-24 12:40:43.045499,geofileops,0.7.0,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),58.749704,{'nb_cpu': 12}
+2023-04-24 12:43:44.307748,geofileops,0.7.0,union,union of 2 agri parcel layers BEFL (2*~500k polygons),181.186453,{'nb_cpu': 12}
