@@ -31,7 +31,7 @@ def _get_package() -> str:
 
 
 def _get_version() -> str:
-    return f"{pyjeo.__version__}".replace("v", "")
+    return f"{pj.__version__}".replace("v", "")
 
 
 def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
@@ -55,7 +55,8 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
     stats = pj.geometry.extract(
         vector_data,
         jim,
-        rule=["mean", "stdev", "count"],
+        # rule=["mean", "stdev", "count"],
+        rule=["mean", "stdev"],
         output="/vsimem/pj.json",
         oformat="GeoJSON",
     )
@@ -76,7 +77,7 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
         )
     )
 
-    logger.info(f"took {secs_taken:.2f}s for {nb_poly} polygons, {len(stats)} results")
+    logger.info(f"took {secs_taken:.2f}s for {nb_poly} polygons, {stats.properties.getFeatureCount()} results")
 
     # Return
     return results
