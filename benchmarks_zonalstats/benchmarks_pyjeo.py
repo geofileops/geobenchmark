@@ -2,7 +2,7 @@
 """
 Module to benchmark zonalstats.
 """
-
+import os
 from datetime import datetime
 import logging
 from pathlib import Path
@@ -62,7 +62,7 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
         vector_data,
         jim,
         # rule=["mean", "stdev", "count"],
-        rule=["mean", "stdev"],
+        rule=["mean", "stdev", "sum"],
         output="/vsimem/pj.json",
         oformat="GeoJSON"
     )
