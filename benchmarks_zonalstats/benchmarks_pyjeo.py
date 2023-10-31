@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 def _get_package() -> str:
-    return "pygeoprocessing"
+    return "pyjeo"
 
 
 def _get_version() -> str:
