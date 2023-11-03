@@ -6,6 +6,12 @@ specific use cases:
 2. IO: performance to read/write vector geo files
 3. Zonalstats: compare performance to calculate zonal stats
 
+To run the benchmarks, you can:
+- clone this repository
+- use the environment.yml file to create a conda environment with the necessary
+  dependencies like this: `conda env create -f environment.yml`
+- run one of the `run_benchmarks_... .py` files
+
 ## Vector ops
 
 The benchmarks included always follow the following usage scenario: 
@@ -41,4 +47,9 @@ Mainly a test of pyogrio performance
 ## Zonalstats
 
 Comparison of different libraries/SW to calculate zonal statistics for polygons.
+
+Remark: pyjeo is not (yet) available via pip/conda to install, so to run the pyjeo
+benchmark, follow the installation instructions
+[here](https://github.com/ec-jrc/jeolib-pyjeo).
+
 ![Zonalstats benchmark](results_zonalstats/GeoBenchmark.png)
