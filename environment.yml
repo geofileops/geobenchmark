@@ -12,5 +12,6 @@ dependencies:
   - pygeoprocessing
   - rasterstats
   # linting
-  - black
-  - flake8
+  - black =23
+  - ruff
+  - pre-commit
