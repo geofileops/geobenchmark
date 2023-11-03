@@ -41,5 +41,4 @@ Mainly a test of pyogrio performance
 ## Zonalstats
 
 Comparison of different libraries/SW to calculate zonal statistics for polygons.
-
-Work in progress.
+![Zonalstats benchmark](results_zonalstats/GeoBenchmark.png)
