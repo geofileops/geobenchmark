@@ -8,7 +8,6 @@ import logging
 from pathlib import Path
 from typing import List
 
-import os
 import pandas as pd
 import geopandas as gpd
 import pyjeo as pj
@@ -33,7 +32,7 @@ def _get_package() -> str:
 
 
 def _get_version() -> str:
-    nproc = os.environ.get('OMP_NUM_THREADS')
+    nproc = os.environ.get("OMP_NUM_THREADS")
     if nproc is not None:
         return f"{pj.__version__} {nproc} threads".replace("v", "")
     else:
@@ -64,7 +63,7 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
         # rule=["mean", "stdev", "count"],
         rule=["mean", "stdev", "sum"],
         output="/vsimem/pj.json",
-        oformat="GeoJSON"
+        oformat="GeoJSON",
     )
 
     print(pd.DataFrame(stats.dict()))
@@ -79,11 +78,14 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
             operation_descr=(
                 f"zonalstats of agri parcels ({nb_poly} polygons) + S2 NDVI BEFL"
             ),
-            run_details={}
+            run_details={},
         )
     )
 
-    logger.info(f"took {secs_taken:.2f}s for {nb_poly} polygons, {stats.properties.getFeatureCount()} results")
+    logger.info(
+        f"took {secs_taken:.2f}s for {nb_poly} polygons, "
+        f"{stats.properties.getFeatureCount()} results"
+    )
 
     # Return
     return results
