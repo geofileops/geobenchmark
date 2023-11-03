@@ -2,12 +2,13 @@
 """
 Module to benchmark zonalstats.
 """
-
+import os
 from datetime import datetime
 import logging
 from pathlib import Path
 from typing import List
 
+import pandas as pd
 import geopandas as gpd
 import pyjeo as pj
 
@@ -27,11 +28,15 @@ logger = logging.getLogger(__name__)
 
 
 def _get_package() -> str:
-    return "pygeoprocessing"
+    return "pyjeo"
 
 
 def _get_version() -> str:
-    return f"{pyjeo.__version__}".replace("v", "")
+    nproc = os.environ.get("OMP_NUM_THREADS")
+    if nproc is not None:
+        return f"{pj.__version__} {nproc} threads".replace("v", "")
+    else:
+        return f"{pj.__version__}".replace("v", "")
 
 
 def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
@@ -55,12 +60,13 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
     stats = pj.geometry.extract(
         vector_data,
         jim,
-        rule=["mean", "stdev", "count"],
+        # rule=["mean", "stdev", "count"],
+        rule=["mean", "stdev", "sum"],
         output="/vsimem/pj.json",
         oformat="GeoJSON",
     )
 
-    print(stats)
+    print(pd.DataFrame(stats.dict()))
 
     secs_taken = (datetime.now() - start_time).total_seconds()
     results.append(
@@ -76,7 +82,10 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
         )
     )
 
-    logger.info(f"took {secs_taken:.2f}s for {nb_poly} polygons, {len(stats)} results")
+    logger.info(
+        f"took {secs_taken:.2f}s for {nb_poly} polygons, "
+        f"{stats.properties.getFeatureCount()} results"
+    )
 
     # Return
     return results
