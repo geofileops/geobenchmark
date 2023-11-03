@@ -31,7 +31,7 @@ def _get_package() -> str:
 
 
 def _get_version() -> str:
-    return f"{pyjeo.__version__}".replace("v", "")
+    return f"{pj.__version__}".replace("v", "")
 
 
 def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
