@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module for benchmarking.
 """
@@ -8,25 +7,14 @@ import importlib
 import inspect
 import logging
 from pathlib import Path
-import sys
 import tempfile
 from typing import List, Optional
 
 import pandas as pd
 
-# Add path so the benchmark packages are found
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 import reporter
 
-################################################################################
-# Some init
-################################################################################
-
 logger = logging.getLogger(__name__)
-
-################################################################################
-# The real work
-################################################################################
 
 
 class RunResult:
@@ -72,7 +60,6 @@ def run_benchmarks(
     modules: Optional[List[str]] = None,
     functions: Optional[List[str]] = None,
 ):
-
     # Init logging
     logging.basicConfig(
         format="%(asctime)s.%(msecs)03d|%(levelname)s|%(name)s|%(message)s",
@@ -92,9 +79,7 @@ def run_benchmarks(
         if (not module_name.startswith("_")) and (module_name not in globals()):
             if modules is not None and module_name not in modules:
                 # Benchmark whitelist specified, and this one isn't in it
-                logger.info(
-                    f"skip module {module_name}: not in modules: {modules}"
-                )
+                logger.info(f"skip module {module_name}: not in modules: {modules}")
                 continue
 
             benchmark_implementation = importlib.import_module(
