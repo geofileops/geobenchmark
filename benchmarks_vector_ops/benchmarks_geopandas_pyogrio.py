@@ -208,9 +208,7 @@ def union(tmp_dir: Path) -> RunResult:
     # union
     start_time_op = datetime.now()
     result_gdf = input1_gdf.overlay(input2_gdf, how="union")
-    logger.info(
-        f"time for union: {(datetime.now()-start_time_op).total_seconds()}"
-    )
+    logger.info(f"time for union: {(datetime.now()-start_time_op).total_seconds()}")
 
     # Write to output file
     start_time_write = datetime.now()

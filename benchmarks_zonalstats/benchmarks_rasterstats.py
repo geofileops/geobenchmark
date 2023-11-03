@@ -50,9 +50,14 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
     start_time = datetime.now()
     #  1.000: 10s
     # 10.000: 97s
-    stats = list(rasterstats.gen_zonal_stats(
-        str(vector_tmp_path), raster_path, band=1, stats=["count", "min", "max", "mean"]
-    ))
+    stats = list(
+        rasterstats.gen_zonal_stats(
+            str(vector_tmp_path),
+            raster_path,
+            band=1,
+            stats=["count", "min", "max", "mean"],
+        )
+    )
     # print(stats)
 
     secs_taken = (datetime.now() - start_time).total_seconds()
