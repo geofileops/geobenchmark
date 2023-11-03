@@ -6,8 +6,10 @@ def main():
     if not all_benchmarks:
         # Only run specific benchmark function(s)
         benchmarker.run_benchmarks(
-            benchmarks_subdir="benchmarks_IO", results_subdir="results_IO",
-            modules=["benchmarks_pyogrio"], functions=["write_dataframe"]
+            benchmarks_subdir="benchmarks_IO",
+            results_subdir="results_IO",
+            modules=["benchmarks_pyogrio"],
+            functions=["write_dataframe"],
         )
         return
 
