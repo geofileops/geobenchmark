@@ -72,6 +72,7 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
         vlayer,
         raster,
         stats=stats,
+        rasterBand=1,
     )
     zoneStats.calculateStatistics(None)
 

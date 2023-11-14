@@ -2,7 +2,7 @@ import benchmarker
 
 
 def main():
-    all_benchmarks = True
+    all_benchmarks = False
     if not all_benchmarks:
         # debug: only run specific benchmark modules/function(s)
         benchmarker.run_benchmarks(
@@ -11,7 +11,7 @@ def main():
             modules=["benchmarks_geofileops"],
             # modules=["benchmarks_geopandas_pyogrio"]
             # modules=["benchmarks_dask_geopandas"],
-            functions=["buffer"],
+            functions=["symmetric_difference_complexpoly_agri"],
         )
         return
 
