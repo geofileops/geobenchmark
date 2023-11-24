@@ -63,7 +63,7 @@ class set_env_variables(object):
 def write_dataframe(tmp_dir: Path) -> List[RunResult]:
     # Init
     results = []
-    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input_path, _, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
     # Go!
     # Read input files

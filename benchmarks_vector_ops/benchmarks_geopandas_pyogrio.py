@@ -1,28 +1,20 @@
-# -*- coding: utf-8 -*-
 """
 Module to benchmark geopandas operations using pyogrio for IO.
 """
 
 from datetime import datetime
+import inspect
 import logging
 from pathlib import Path
 
-from geofileops.util import geoseries_util
+from geofileops.util import _geoseries_util
 import geopandas as gpd
 import pyogrio
 
 from benchmarker import RunResult
 import testdata
 
-################################################################################
-# Some init
-################################################################################
-
 logger = logging.getLogger(__name__)
-
-################################################################################
-# The real work
-################################################################################
 
 
 def _get_package() -> str:
@@ -35,7 +27,7 @@ def _get_version() -> str:
 
 def buffer(tmp_dir: Path) -> RunResult:
     # Init
-    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
     # Go!
     # Read input file
@@ -53,7 +45,7 @@ def buffer(tmp_dir: Path) -> RunResult:
     # Write to output file
     start_time_write = datetime.now()
     # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
-    gdf.geometry = geoseries_util.harmonize_geometrytypes(gdf.geometry)
+    gdf.geometry = _geoseries_util.harmonize_geometrytypes(gdf.geometry)
     output_path = tmp_dir / f"{input_path.stem}_geopandas_buf.gpkg"
     pyogrio.write_dataframe(gdf, output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
@@ -73,7 +65,7 @@ def buffer(tmp_dir: Path) -> RunResult:
 
 def dissolve(tmp_dir: Path) -> RunResult:
     # Init
-    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
     # Go!
     # Read input file
@@ -112,7 +104,7 @@ def dissolve(tmp_dir: Path) -> RunResult:
 
 def dissolve_groupby(tmp_dir: Path) -> RunResult:
     # Init
-    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
     # Go!
     # Read input file
@@ -153,8 +145,8 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
 
 def intersection(tmp_dir: Path) -> RunResult:
     # Init
-    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
-    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+    input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
 
     # Go!
     # Read input files
@@ -173,7 +165,7 @@ def intersection(tmp_dir: Path) -> RunResult:
     # Write to output file
     start_time_write = datetime.now()
     # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
-    result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    result_gdf.geometry = _geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
     output_path = tmp_dir / f"{input1_path.stem}_inters_{input2_path.stem}.gpkg"
     pyogrio.write_dataframe(
         result_gdf, output_path, layer=output_path.stem, driver="GPKG"
@@ -193,10 +185,56 @@ def intersection(tmp_dir: Path) -> RunResult:
     return result
 
 
+def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
+    # Init
+    function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
+
+    input1_path, input1_descr = testdata.TestFile.COMPLEX_POLYS.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+
+    start_time = datetime.now()
+    input1_gdf = pyogrio.read_dataframe(input1_path)
+    input2_gdf = pyogrio.read_dataframe(input2_path)
+    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+
+    # symmetric_difference
+    start_time_op = datetime.now()
+    result_gdf = input1_gdf.overlay(input2_gdf, how="symmetric_difference")
+    logger.info(
+        "time for symmetric_difference: "
+        f"{(datetime.now()-start_time_op).total_seconds()}"
+    )
+
+    # Write to output file
+    start_time_write = datetime.now()
+    # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
+    result_gdf.geometry = _geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    output_path = tmp_dir / f"{input1_path.stem}_symdif_{input2_path.stem}.gpkg"
+    pyogrio.write_dataframe(
+        result_gdf, output_path, layer=output_path.stem, driver="GPKG"
+    )
+    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    secs_taken = (datetime.now() - start_time).total_seconds()
+    result = RunResult(
+        package=_get_package(),
+        package_version=_get_version(),
+        operation=function_name,
+        secs_taken=secs_taken,
+        operation_descr=(
+            f"symmetric difference between {input1_descr} and agriparcels BEFL "
+            "(~500k poly)"
+        ),
+    )
+
+    # Cleanup and return
+    output_path.unlink()
+    return result
+
+
 def union(tmp_dir: Path) -> RunResult:
     # Init
-    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
-    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+    input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
 
     # Go!
     # Read input files
@@ -213,7 +251,7 @@ def union(tmp_dir: Path) -> RunResult:
     # Write to output file
     start_time_write = datetime.now()
     # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
-    result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    result_gdf.geometry = _geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
     output_path = tmp_dir / f"{input1_path.stem}_union_{input2_path.stem}.gpkg"
     pyogrio.write_dataframe(
         result_gdf, output_path, layer=output_path.stem, driver="GPKG"

@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 """
 Module to benchmark geofileops operations.
 """
 
 from datetime import datetime
+import inspect
 import logging
 import multiprocessing
 from pathlib import Path
@@ -13,15 +13,7 @@ import geofileops as gfo
 from benchmarker import RunResult
 import testdata
 
-################################################################################
-# Some init
-################################################################################
-
 logger = logging.getLogger(__name__)
-
-################################################################################
-# The real work
-################################################################################
 
 
 def _get_package() -> str:
@@ -45,7 +37,7 @@ def _get_nb_parallel() -> int:
 
 def buffer(tmp_dir: Path) -> RunResult:
     # Init
-    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
     # Go!
     start_time = datetime.now()
@@ -72,8 +64,8 @@ def _clip(tmp_dir: Path) -> RunResult:
     Clip doesn't work for the other libraries, so no use to activate it here.
     """
     # Init
-    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
-    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+    input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
 
     # Go!
     start_time = datetime.now()
@@ -101,7 +93,7 @@ def _clip(tmp_dir: Path) -> RunResult:
 
 def dissolve_nogroupby(tmp_dir: Path) -> RunResult:
     # Init
-    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
     # Go!
     start_time = datetime.now()
@@ -129,7 +121,7 @@ def dissolve_nogroupby(tmp_dir: Path) -> RunResult:
 
 def dissolve_groupby(tmp_dir: Path) -> RunResult:
     # Init
-    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
     # Go!
     start_time = datetime.now()
@@ -160,8 +152,8 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
 
 def intersection(tmp_dir: Path) -> RunResult:
     # Init
-    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
-    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+    input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
 
     # Go!
     start_time = datetime.now()
@@ -187,10 +179,44 @@ def intersection(tmp_dir: Path) -> RunResult:
     return result
 
 
+def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
+    # Init
+    function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
+
+    input1_path, input1_descr = testdata.TestFile.COMPLEX_POLYS.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+
+    # Go!
+    start_time = datetime.now()
+    output_path = tmp_dir / f"{input1_path.stem}_symdif_{input2_path.stem}.gpkg"
+    gfo.symmetric_difference(
+        input1_path=input1_path,
+        input2_path=input2_path,
+        output_path=output_path,
+        nb_parallel=_get_nb_parallel(),
+        force=True,
+    )
+    result = RunResult(
+        package=_get_package(),
+        package_version=_get_version(),
+        operation=function_name,
+        secs_taken=(datetime.now() - start_time).total_seconds(),
+        operation_descr=(
+            f"symmetric difference between {input1_descr} and agriparcels BEFL "
+            "(~500k poly)"
+        ),
+        run_details={"nb_cpu": _get_nb_parallel()},
+    )
+
+    # Cleanup and return
+    output_path.unlink()
+    return result
+
+
 def union(tmp_dir: Path) -> RunResult:
     # Init
-    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
-    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+    input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
 
     # Go!
     start_time = datetime.now()
