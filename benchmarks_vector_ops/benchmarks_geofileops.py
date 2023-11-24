@@ -202,7 +202,8 @@ def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
         operation=function_name,
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr=(
-            f"{function_name} between {input1_descr} and agriparcels BEFL (~500k poly)"
+            f"symmetric difference between {input1_descr} and agriparcels BEFL "
+            "(~500k poly)"
         ),
         run_details={"nb_cpu": _get_nb_parallel()},
     )

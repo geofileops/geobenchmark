@@ -221,7 +221,8 @@ def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
         operation=function_name,
         secs_taken=secs_taken,
         operation_descr=(
-            f"{function_name} between {input1_descr} and agriparcels BEFL (~500k poly)"
+            f"symmetric difference between {input1_descr} and agriparcels BEFL "
+            "(~500k poly)"
         ),
     )
 
