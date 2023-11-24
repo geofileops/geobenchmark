@@ -60,14 +60,4 @@ run_datetime,package,package_version,operation,operation_descr,secs_taken,run_de
 2023-04-24 12:40:43.045499,geofileops,0.7.0,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),58.749704,{'nb_cpu': 12}
 2023-04-24 12:43:44.307748,geofileops,0.7.0,union,union of 2 agri parcel layers BEFL (2*~500k polygons),181.186453,{'nb_cpu': 12}
 2023-11-24 22:51:02.336762,geopandas_pyogrio,0.14.1_0.7.2,symdif_complexpolys_agri,symmetric difference between 10 complex polys (each 20778 coords) and agriparcels BEFL (~500k poly),11338.431796,
-2023-11-24 18:33:56.534677,geofileops,0.8.0,symdif_complexpolys_agri,symmeric difference between 10 complex polys (each 20778 coords) and agriparcels BEFL (~500k poly),67.9271,{'nb_cpu': 12}
-2023-11-24 18:30:30.322255,geofileops,0.8.0,buffer,buffer on agri parcel layer BEFL (~500k polygons),18.897057,{'nb_cpu': 12}
-2023-11-24 18:31:16.162725,geofileops,0.8.0,dissolve_groupby,"dissolve on agri parcels BEFL (~500k polygons), groupby=[GEWASGROEP]",45.748121,{'nb_cpu': 12}
-2023-11-24 18:32:00.935672,geofileops,0.8.0,dissolve,dissolve on agri parcels BEFL (~500k polygons),44.724859,{'nb_cpu': 12}
-2023-11-24 18:32:47.873362,geofileops,0.8.0,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),46.868947,{'nb_cpu': 12}
-2023-11-24 18:36:53.154450,geofileops,0.8.0,union,union of 2 agri parcel layers BEFL (2*~500k polygons),176.543542,{'nb_cpu': 12}
-2023-11-24 18:56:36.669524,geopandas_pyogrio,0.14.1_0.7.2,buffer,buffer agri parcels BEFL (~500k polygons),47.215435,
-2023-11-24 19:26:09.496274,geopandas_pyogrio,0.14.1_0.7.2,dissolve,dissolve agri parcels BEFL (~500k polygons),1772.154803,
-2023-11-24 19:37:31.076006,geopandas_pyogrio,0.14.1_0.7.2,dissolve_groupby,"dissolve on agri parcels BEFL (~500k polygons), groupby=GEWASGROEP",680.642191,
-2023-11-24 19:41:59.038960,geopandas_pyogrio,0.14.1_0.7.2,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),266.909965,
-2023-11-24 23:19:07.775150,geopandas_pyogrio,0.14.1_0.7.2,union,union of 2 agri parcel layers BEFL (2*~500k polygons),1684.133194,
+2023-11-24 18:33:56.534677,geofileops,0.8.0,symdif_complexpolys_agri,symmetric difference between 10 complex polys (each 20778 coords) and agriparcels BEFL (~500k poly),67.9271,{'nb_cpu': 12}

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module to prepare test data for benchmarking geo operations.
 """
@@ -9,21 +8,16 @@ from pathlib import Path
 import pprint
 import shutil
 import tempfile
-from typing import Optional
+from typing import Optional, Tuple
+
+import geopandas as gpd
+import shapely
 import urllib.request
 import zipfile
 
 import geofileops as gfo
 
-################################################################################
-# Some inits
-################################################################################
-
 logger = logging.getLogger(__name__)
-
-################################################################################
-# The real work
-################################################################################
 
 
 class TestFile(enum.Enum):
@@ -45,6 +39,7 @@ class TestFile(enum.Enum):
         ".zip",
         "s2_ndvi_2020.tif",
     )
+    COMPLEX_POLYS = (3, None, None, "complexpolys.gpkg")
 
     def __init__(self, value, download_url, download_suffix, dst_name):
         self._value_ = value
@@ -52,21 +47,103 @@ class TestFile(enum.Enum):
         self.download_suffix = download_suffix
         self.dst_name = dst_name
 
-    def get_file(self, tmp_dir: Path) -> Path:
-        testfile_path = download_samplefile(
-            download_url=self.download_url,
-            download_suffix=self.download_suffix,
-            dst_name=self.dst_name,
-            dst_dir=tmp_dir,
-        )
+    def get_file(self, output_dir: Path) -> Tuple[Path, str]:
+        """
+        Creates the test file.
 
-        if gfo.is_geofile(testfile_path):
-            testfile_info = gfo.get_layerinfo(testfile_path)
-            logger.debug(
-                f"TestFile {self.name} contains {testfile_info.featurecount} rows."
+        Args:
+            tmp_dir (Path): the directory to write the file to.
+
+        Returns:
+            _type_: The path to the file + a description of the test file.
+        """
+        description = None
+        if self.download_url is not None:
+            testfile_path = download_samplefile(
+                download_url=self.download_url,
+                download_suffix=self.download_suffix,
+                dst_name=self.dst_name,
+                dst_dir=output_dir,
             )
 
-        return testfile_path
+            if testfile_path.suffix.lower() == ".gpkg":
+                testfile_info = gfo.get_layerinfo(testfile_path)
+                logger.debug(
+                    f"TestFile {self.name} contains {testfile_info.featurecount} rows."
+                )
+                description = f"agri parcels, {testfile_info.featurecount} rows"
+
+        elif self.name == "COMPLEX_POLYS":
+            # Prepare some complex polygons to test with
+            xmin_start = 30000
+            step = 20000
+            nb_polys = 10
+            polys_complex = [
+                create_complex_poly(
+                    xmin=xmin,
+                    ymin=170000.123,
+                    width=15000,
+                    height=15000,
+                    line_distance=500,
+                    max_segment_length=100,
+                )
+                for xmin in range(xmin_start, xmin_start + (nb_polys * step), step)
+            ]
+            logger.debug(
+                f"polys_complex: {len(polys_complex)} polys with num_coordinates: "
+                f"{shapely.get_num_coordinates(polys_complex[0])}"
+            )
+            testfile_path = output_dir / self.dst_name
+            complex_gdf = gpd.GeoDataFrame(geometry=polys_complex, crs="epsg:31370")
+            complex_gdf.to_file(testfile_path, engine="pyogrio")
+            description = (
+                f"{len(polys_complex)} complex polys "
+                f"(each {shapely.get_num_coordinates(polys_complex[0])} coords)"
+            )
+
+        else:
+            raise RuntimeError(f"get_file not implemented for {self.name}")
+
+        if description is None:
+            description = testfile_path.stem
+
+        return (testfile_path, description)
+
+
+def create_complex_poly(
+    xmin: float,
+    ymin: float,
+    width: int,
+    height: int,
+    line_distance: int,
+    max_segment_length: int,
+) -> shapely.Polygon:
+    """Create complex polygon of a ~grid-shape the size specified."""
+    lines = []
+
+    # Vertical lines
+    for x_offset in range(0, 0 + width, line_distance):
+        lines.append(
+            shapely.LineString(
+                [(xmin + x_offset, ymin), (xmin + x_offset, ymin + height)]
+            )
+        )
+
+    # Horizontal lines
+    for y_offset in range(0, 0 + height, line_distance):
+        lines.append(
+            shapely.LineString(
+                [(xmin, ymin + y_offset), (xmin + width, ymin + y_offset)]
+            )
+        )
+
+    poly_complex = shapely.unary_union(shapely.MultiLineString(lines).buffer(2))
+    poly_complex = shapely.segmentize(
+        poly_complex, max_segment_length=max_segment_length
+    )
+    assert len(shapely.get_parts(poly_complex)) == 1
+
+    return poly_complex
 
 
 def download_samplefile(
