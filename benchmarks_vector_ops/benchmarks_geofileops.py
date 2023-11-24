@@ -179,7 +179,7 @@ def intersection(tmp_dir: Path) -> RunResult:
     return result
 
 
-def sym_diff_complexpolys_agri(tmp_dir: Path) -> RunResult:
+def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
 
