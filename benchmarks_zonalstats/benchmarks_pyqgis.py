@@ -39,8 +39,8 @@ def _get_version() -> str:
 def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
     # Init
     results = []
-    vector_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
-    raster_path = testdata.TestFile.S2_NDVI_2020.get_file(tmp_dir)
+    vector_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    raster_path, _ = testdata.TestFile.S2_NDVI_2020.get_file(tmp_dir)
 
     # Prepare a sample of the parcels, otherwise to slow
     nb_poly = common.nb_polygons_for_test
@@ -72,6 +72,7 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
         vlayer,
         raster,
         stats=stats,
+        rasterBand=1,
     )
     zoneStats.calculateStatistics(None)
 

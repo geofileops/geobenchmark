@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 """
 Module to benchmark geopandas operations.
 """
 
 from datetime import datetime
+import inspect
 import logging
 from pathlib import Path
 
@@ -13,15 +13,7 @@ import geopandas as gpd
 from benchmarker import RunResult
 import testdata
 
-################################################################################
-# Some init
-################################################################################
-
 logger = logging.getLogger(__name__)
-
-################################################################################
-# The real work
-################################################################################
 
 
 def _get_package() -> str:
@@ -34,7 +26,7 @@ def _get_version() -> str:
 
 def buffer(tmp_dir: Path) -> RunResult:
     # Init
-    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
     # Go!
     # Read input file
@@ -73,8 +65,8 @@ def _clip(tmp_dir: Path) -> RunResult:
     so no use to activate benchmark
     """
     # Init
-    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
-    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+    input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
 
     # Go!
     # Read input files
@@ -112,7 +104,7 @@ def _clip(tmp_dir: Path) -> RunResult:
 
 def dissolve(tmp_dir: Path) -> RunResult:
     # Init
-    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
     # Go!
     # Read input file
@@ -149,7 +141,7 @@ def dissolve(tmp_dir: Path) -> RunResult:
 
 def dissolve_groupby(tmp_dir: Path) -> RunResult:
     # Init
-    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
     # Go!
     # Read input file
@@ -188,8 +180,8 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
 
 def intersection(tmp_dir: Path) -> RunResult:
     # Init
-    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
-    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+    input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
 
     # Go!
     # Read input files
@@ -226,10 +218,53 @@ def intersection(tmp_dir: Path) -> RunResult:
     return result
 
 
+def symmetric_difference_complexpolys_agri(tmp_dir: Path) -> RunResult:
+    # Init
+    function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
+
+    input1_path, input1_descr = testdata.TestFile.COMPLEX_POLYS.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+
+    start_time = datetime.now()
+    input1_gdf = gpd.read_file(input1_path)
+    input2_gdf = gpd.read_file(input2_path)
+    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+
+    # symmetric_difference
+    start_time_op = datetime.now()
+    result_gdf = input1_gdf.overlay(input2_gdf, how="symmetric_difference")
+    logger.info(
+        "time for symmetric_difference: "
+        f"{(datetime.now()-start_time_op).total_seconds()}"
+    )
+
+    # Write to output file
+    start_time_write = datetime.now()
+    # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
+    result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    output_path = tmp_dir / f"{input1_path.stem}_symdif_{input2_path.stem}.gpkg"
+    result_gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
+    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    secs_taken = (datetime.now() - start_time).total_seconds()
+    result = RunResult(
+        package=_get_package(),
+        package_version=_get_version(),
+        operation=function_name,
+        secs_taken=secs_taken,
+        operation_descr=(
+            f"{function_name} between {input1_descr} and agriparcels BEFL (~500k poly)"
+        ),
+    )
+
+    # Cleanup and return
+    output_path.unlink()
+    return result
+
+
 def union(tmp_dir: Path) -> RunResult:
     # Init
-    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
-    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+    input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
 
     # Go!
     # Read input files

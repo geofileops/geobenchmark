@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module to benchmark geopandas operations.
 """
@@ -17,15 +16,7 @@ import pyogrio
 from benchmarker import RunResult
 import testdata
 
-################################################################################
-# Some init
-################################################################################
-
 logger = logging.getLogger(__name__)
-
-################################################################################
-# The real work
-################################################################################
 
 
 def _get_package() -> str:
@@ -49,7 +40,7 @@ def _get_nb_parallel() -> int:
 
 def buffer(tmp_dir: Path) -> RunResult:
     # Init
-    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
     # Go!
     # Read input file
@@ -112,8 +103,8 @@ def _clip(tmp_dir: Path) -> RunResult:
     # TODO: try using a less complex clip layer
 
     # Init
-    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
-    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+    input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
     """
     client = Client(
         LocalCluster(
@@ -165,7 +156,7 @@ def _clip(tmp_dir: Path) -> RunResult:
 
 def dissolve(tmp_dir: Path) -> RunResult:
     # Init
-    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
     # Go!
     # Read input file
@@ -210,7 +201,7 @@ def dissolve(tmp_dir: Path) -> RunResult:
 
 def dissolve_groupby(tmp_dir: Path) -> RunResult:
     # Init
-    input_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
     # Go!
     # Read input file
@@ -266,8 +257,8 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
 def intersection(tmp_dir: Path) -> RunResult:
     # Intersection operation is not yet supported in dask-geopandas
     # Init
-    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
-    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+    input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
 
     # Go!
     # Read input files
