@@ -61,6 +61,14 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
     # Reads the input file
     vlayer = qgis.core.QgsVectorLayer(str(vector_tmp_path), vector_tmp_path.stem, "ogr")
 
+    if True:
+        # Materializing the vector layer in memory gives a performance boost of 35%
+        vlayer_mem = vlayer.materialize(
+            qgis.core.QgsFeatureRequest().setFilterFids(vlayer.allFeatureIds())
+        )
+        del vlayer
+        vlayer = vlayer_mem
+
     # Calculates zonal stats with raster
     raster = qgis.core.QgsRasterLayer(str(raster_path))
     stats = (
@@ -86,7 +94,9 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
     df = pd.DataFrame(data, columns=columns)
     df["geometry"] = gpd.GeoSeries.from_wkt(df["geometry"])
     stats = gpd.GeoDataFrame(
-        df, geometry="geometry", crs=vlayer.crs().toWkt()  # type: ignore
+        df,
+        geometry="geometry",
+        crs=vlayer.crs().toWkt(),  # type: ignore
     )
     del vlayer
 

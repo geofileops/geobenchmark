@@ -2,7 +2,7 @@ import benchmarker
 
 
 def main():
-    all_benchmarks = True
+    all_benchmarks = False
     if not all_benchmarks:
         # debug: only run specific benchmark modules/function(s)
         benchmarker.run_benchmarks(
