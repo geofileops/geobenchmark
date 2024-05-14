@@ -13,3 +13,5 @@ dependencies:
   # linting
   - ruff
   - pre-commit
+  - pip:
+    - exactextract
