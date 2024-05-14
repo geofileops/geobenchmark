@@ -8,7 +8,6 @@ dependencies:
   - geofileops
   - geopandas
   - qgis
-  - rasterstats
   # linting
   - ruff
   - pre-commit
