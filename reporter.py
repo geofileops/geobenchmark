@@ -262,7 +262,7 @@ def save_chart(
 
 
 if __name__ == "__main__":
-    #results_dir = Path(__file__).resolve().parent / "results_vector_ops"
+    # results_dir = Path(__file__).resolve().parent / "results_vector_ops"
     results_dir = Path(__file__).resolve().parent / "results_zonalstats"
     results_path = results_dir / "benchmark_results.csv"
     output_dir = results_dir

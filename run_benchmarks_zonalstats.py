@@ -11,7 +11,8 @@ def main():
             # modules=["benchmarks_rasterstats"],
             # modules=["benchmarks_pygeoops"],
             # modules=["benchmarks_geowombat"],
-            modules=["benchmarks_pyqgis"],
+            # modules=["benchmarks_pyqgis"],
+            modules=["benchmarks_exactextract"],
         )
         return
 
