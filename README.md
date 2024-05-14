@@ -46,7 +46,7 @@ Mainly a test of pyogrio performance
 
 ## Zonalstats
 
-Comparison of different libraries/SW to calculate zonal statistics for polygons.
+Comparison of different libraries/SW to calculate zonal statistics for 5000 polygons.
 
 Remark: pyjeo is not (yet) available via pip/conda to install, so to run the pyjeo
 benchmark, follow the installation instructions
