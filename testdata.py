@@ -23,13 +23,13 @@ logger = logging.getLogger(__name__)
 class TestFile(enum.Enum):
     AGRIPRC_2018 = (
         0,
-        "https://downloadagiv.blob.core.windows.net/landbouwgebruikspercelen/2018/Landbouwgebruikspercelen_LV_2018_GewVLA_Shape.zip",
+        "https://www.landbouwvlaanderen.be/bestanden/gis/Landbouwgebruikspercelen_2018_-_Definitief_(extractie_23-03-2022)_GPKG.zip",
         ".zip",
         "agriprc_2018.gpkg",
     )
     AGRIPRC_2019 = (
         1,
-        "https://downloadagiv.blob.core.windows.net/landbouwgebruikspercelen/2019/Landbouwgebruikspercelen_LV_2019_GewVLA_Shapefile.zip",
+        "https://www.landbouwvlaanderen.be/bestanden/gis/Landbouwgebruikspercelen_2019_-_Definitief_(extractie_20-03-2020)_GPKG.zip",
         ".zip",
         "agriprc_2019.gpkg",
     )
