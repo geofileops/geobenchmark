@@ -9,7 +9,7 @@ def main():
             benchmarks_subdir="benchmarks_vector_ops",
             results_subdir="results_vector_ops",
             # modules=["benchmarks_geofileops"],
-            modules=["benchmarks_geopandas_pyogrio"]
+            modules=["benchmarks_geopandas_pyogrio"],
             # modules=["benchmarks_geopandas"]
             # modules=["benchmarks_dask_geopandas"],
             # functions=["buffer"],

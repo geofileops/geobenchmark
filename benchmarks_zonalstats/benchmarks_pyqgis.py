@@ -100,7 +100,7 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
     )
     del vlayer
 
-    print(stats)
+    # print(stats)
 
     secs_taken = (datetime.now() - start_time).total_seconds()
     results.append(
@@ -110,7 +110,7 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
             operation="zonalstats_1band",
             secs_taken=secs_taken,
             operation_descr=(
-                f"zonalstats of agri parcels ({nb_poly} polygons) + S2 NDVI BEFL"
+                f"zonalstats of agri parcels ({nb_poly} polygons) + S2 NDVI RGB BEFL"
             ),
             run_details={},
         )
