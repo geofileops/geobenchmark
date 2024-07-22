@@ -213,7 +213,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     start_time_dissolve = datetime.now()
     dgdf = dgpd.from_geopandas(gdf, npartitions=_get_nb_parallel())
     assert isinstance(dgdf, dgpd.GeoDataFrame)
-    dgdf = dgdf.dissolve(by="GEWASGROEP", split_out=_get_nb_parallel())
+    dgdf = dgdf.dissolve(by="GWSGRPH_LB", split_out=_get_nb_parallel())
     dgdf = dgdf.explode()
     result_gdf = dgdf.compute()
     logger.info(
@@ -244,7 +244,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
         operation="dissolve_groupby",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr=(
-            "dissolve on agri parcels BEFL (~500k polygons), groupby=GEWASGROEP"
+            "dissolve on agri parcels BEFL (~500k polygons), groupby=GWSGRPH_LB"
         ),
     )
 

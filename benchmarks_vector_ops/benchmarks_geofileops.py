@@ -129,7 +129,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     gfo.dissolve(
         input_path,
         output_path,
-        groupby_columns=["GEWASGROEP"],
+        groupby_columns=["GWSGRPH_LB"],
         explodecollections=True,
         force=True,
         nb_parallel=_get_nb_parallel(),
@@ -140,7 +140,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
         operation="dissolve_groupby",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr=(
-            "dissolve on agri parcels BEFL (~500k polygons), groupby=[GEWASGROEP]"
+            "dissolve on agri parcels BEFL (~500k polygons), groupby=[GWSGRPH_LB]"
         ),
         run_details={"nb_cpu": _get_nb_parallel()},
     )
@@ -183,8 +183,8 @@ def join_by_location_intersects(tmp_dir: Path) -> RunResult:
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
 
-    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
-    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+    input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
 
     # Go!
     start_time = datetime.now()
