@@ -1,0 +1,17 @@
+name: geobenchmark
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  # required
+  - geofileops
+  - geopandas
+  - geowombat
+  - pygeoprocessing
+  - rasterstats
+  # linting
+  - ruff
+  - pre-commit
+  - pip:
+    - exactextract

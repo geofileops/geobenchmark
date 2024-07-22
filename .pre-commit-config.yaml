@@ -1,0 +1,10 @@
+ci:
+    autofix_prs: false
+    autoupdate_schedule: weekly
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: "v0.1.13"
+    hooks:
+      - id: ruff-format
+      - id: ruff

@@ -1,0 +1,13 @@
+name: zonalstats-qgis
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  # required
+  - geofileops
+  - geopandas
+  - qgis
+  # linting
+  - ruff
+  - pre-commit
