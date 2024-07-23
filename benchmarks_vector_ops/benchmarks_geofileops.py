@@ -179,7 +179,7 @@ def intersection(tmp_dir: Path) -> RunResult:
     return result
 
 
-def join_by_location_intersects(tmp_dir: Path) -> RunResult:
+def _join_by_location_intersects(tmp_dir: Path) -> RunResult:
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
 
