@@ -73,6 +73,3 @@ run_datetime,package,package_version,operation,operation_descr,secs_taken,run_de
 2024-07-22 13:49:55.426539,geopandas,1.0.1,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),193.52728,
 2024-07-22 17:00:06.389066,geopandas,1.0.1,symdif_complexpolys_agri,symdif_complexpolys_agri between 10 complex polys (each 20778 coords) and agriparcels BEFL (~500k poly),11408.019233,
 2024-07-22 17:20:30.557312,geopandas,1.0.1,union,union of 2 agri parcel layers BEFL (2*~500k polygons),1222.984603,
-2024-07-22 12:58:42.428217,geofileops,0.9.1,join_by_location_intersects,join_by_location_intersects between 2 agri parcel layers BEFL (2*~500.000 polygons),57.365501,{'nb_cpu': 12}
-2024-07-22 12:59:50.350052,geofileops,0.9.1,symdif_complexpolys_agri,symmetric difference between 10 complex polys (each 20778 coords) and agriparcels BEFL (~500k poly),67.265704,{'nb_cpu': 12}
-2024-07-22 13:02:08.709670,geofileops,0.9.1,union,union of 2 agri parcel layers BEFL (2*~500k polygons),138.270441,{'nb_cpu': 12}
