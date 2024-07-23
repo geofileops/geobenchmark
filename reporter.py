@@ -256,14 +256,16 @@ def save_chart(
             if not np.array_equal(img_new, img_old):
                 shutil.move(tmp_output_path, output_path)
 
+    plt.close(fig)
+
     # Open if wanted
     if open_output_file is True:
         os.startfile(output_path)
 
 
 if __name__ == "__main__":
-    # results_dir = Path(__file__).resolve().parent / "results_vector_ops"
-    results_dir = Path(__file__).resolve().parent / "results_zonalstats"
+    results_dir = Path(__file__).resolve().parent / "results_vector_ops"
+    # results_dir = Path(__file__).resolve().parent / "results_zonalstats"
     results_path = results_dir / "benchmark_results.csv"
     output_dir = results_dir
     generate_reports(results_path, output_dir)
