@@ -129,7 +129,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     gfo.dissolve(
         input_path,
         output_path,
-        groupby_columns=["GEWASGROEP"],
+        groupby_columns=["GWSGRPH_LB"],
         explodecollections=True,
         force=True,
         nb_parallel=_get_nb_parallel(),
@@ -140,7 +140,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
         operation="dissolve_groupby",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr=(
-            "dissolve on agri parcels BEFL (~500k polygons), groupby=[GEWASGROEP]"
+            "dissolve on agri parcels BEFL (~500k polygons), groupby=[GWSGRPH_LB]"
         ),
         run_details={"nb_cpu": _get_nb_parallel()},
     )
@@ -179,6 +179,46 @@ def intersection(tmp_dir: Path) -> RunResult:
     return result
 
 
+def _join_by_location_intersects(tmp_dir: Path) -> RunResult:
+    # Init
+    function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
+
+    input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+
+    # Go!
+    start_time = datetime.now()
+    output_path = (
+        tmp_dir
+        / f"{input1_path.stem}_join_inters_{input2_path.stem}_{_get_package()}.gpkg"
+    )
+    gfo.join_by_location(
+        input1_path=input1_path,
+        input2_path=input2_path,
+        output_path=output_path,
+        spatial_relations_query="intersects is True",
+        force=True,
+        nb_parallel=_get_nb_parallel(),
+    )
+
+    result = RunResult(
+        package=_get_package(),
+        package_version=_get_version(),
+        operation=function_name,
+        secs_taken=(datetime.now() - start_time).total_seconds(),
+        operation_descr=(
+            "join_by_location_intersects between 2 agri parcel layers BEFL "
+            "(2*~500.000 polygons)"
+        ),
+        run_details={"nb_cpu": _get_nb_parallel()},
+    )
+
+    # Cleanup and return
+    logger.info(f"nb features in result: {gfo.get_layerinfo(output_path).featurecount}")
+    output_path.unlink()
+    return result
+
+
 def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
@@ -209,6 +249,7 @@ def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
     )
 
     # Cleanup and return
+    logger.info(f"nb features in result: {gfo.get_layerinfo(output_path).featurecount}")
     output_path.unlink()
     return result
 

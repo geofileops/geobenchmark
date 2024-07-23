@@ -9,7 +9,7 @@ from pathlib import Path
 
 import dask_geopandas as dgpd
 
-# from dask.distributed import Client, LocalCluster
+import geofileops as gfo
 from geofileops.util import geoseries_util
 import pyogrio
 
@@ -213,7 +213,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     start_time_dissolve = datetime.now()
     dgdf = dgpd.from_geopandas(gdf, npartitions=_get_nb_parallel())
     assert isinstance(dgdf, dgpd.GeoDataFrame)
-    dgdf = dgdf.dissolve(by="GEWASGROEP", split_out=_get_nb_parallel())
+    dgdf = dgdf.dissolve(by="GWSGRPH_LB", split_out=_get_nb_parallel())
     dgdf = dgdf.explode()
     result_gdf = dgdf.compute()
     logger.info(
@@ -244,11 +244,60 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
         operation="dissolve_groupby",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr=(
-            "dissolve on agri parcels BEFL (~500k polygons), groupby=GEWASGROEP"
+            "dissolve on agri parcels BEFL (~500k polygons), groupby=GWSGRPH_LB"
         ),
     )
 
     # Cleanup and return
+    output_path.unlink()
+    return result
+
+
+def join_by_location_intersects(tmp_dir: Path) -> RunResult:
+    # Init-
+    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+
+    ### Go! ###
+    # Read input files
+    start_time = datetime.now()
+    input1_gdf = pyogrio.read_dataframe(input1_path)
+    input2_gdf = pyogrio.read_dataframe(input2_path)
+    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+
+    # intersect
+    start_time_operation = datetime.now()
+    input1_dgdf = dgpd.from_geopandas(input1_gdf, npartitions=_get_nb_parallel())
+    joined_dgdf = dgpd.sjoin(input1_dgdf, input2_gdf, predicate="intersects")
+    result_gdf = joined_dgdf.compute()
+    logger.info(
+        f"time for intersect: {(datetime.now()-start_time_operation).total_seconds()}"
+    )
+
+    # Write to output file
+    start_time_write = datetime.now()
+    output_path = (
+        tmp_dir / f"{input1_path.stem}_inters_{input2_path.stem}_{_get_package()}.gpkg"
+    )
+    pyogrio.write_dataframe(
+        result_gdf, output_path, layer=output_path.stem, driver="GPKG"
+    )
+
+    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    result = RunResult(
+        package=_get_package(),
+        package_version=_get_version(),
+        operation="join_by_location_intersects",
+        secs_taken=(datetime.now() - start_time).total_seconds(),
+        operation_descr=(
+            "join_by_location_intersects between 2 agri parcel layers BEFL "
+            "(2*~500.000 polygons)"
+        ),
+        run_details={"nb_cpu": multiprocessing.cpu_count()},
+    )
+
+    # Cleanup and return
+    logger.info(f"nb features in result: {gfo.get_layerinfo(output_path).featurecount}")
     output_path.unlink()
     return result
 
