@@ -69,7 +69,7 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
             "mean",
             "min",
             "max",
-            # "count(coverage_weight=none)",
+            "count(coverage_weight=none)",
             # "mean(coverage_weight=none)",
             # "min(coverage_weight=none)",
             # "max(coverage_weight=none)",

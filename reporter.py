@@ -67,24 +67,32 @@ def generate_reports(results_path: Path, output_dir: Path):
             )
 
     # Report for last version of each package+operation for comparison
+    from packaging.version import Version
+
+    benchmark_df["version_suffix"] = benchmark_df["package_version"].apply(
+        lambda x: x.split("-")[1] if len(x.split("-")) > 1 else ""
+    )
+    benchmark_df["version"] = benchmark_df["package_version"].apply(
+        lambda x: Version(x.split("-")[0])
+    )
     benchmark_maxversions_df = (
-        benchmark_df[["package", "operation", "package_version"]]
-        .sort_values(["package", "operation", "package_version"], ascending=False)
+        benchmark_df[["package", "operation", "version", "version_suffix"]]
+        .sort_values(["package", "operation", "version", "version_suffix"], ascending=False)
         .groupby(["package", "operation"])
         .first()
         .reset_index()
-        .set_index(["package", "operation", "package_version"])
+        .set_index(["package", "operation", "version", "version_suffix"])
     )
     benchmark_maxversion_df = benchmark_df.set_index(
-        ["package", "operation", "package_version"]
+        ["package", "operation", "version", "version_suffix"]
     )
     benchmark_maxversion_df = (
         benchmark_maxversion_df.loc[
             benchmark_maxversion_df.index.isin(benchmark_maxversions_df.index)
         ].reset_index()
-    )[["package", "package_version", "operation", "secs_taken"]]
+    )[["package", "version", "version_suffix", "operation", "secs_taken"]]
     benchmark_maxversion_df = benchmark_maxversion_df.pivot_table(
-        index="operation", columns=["package", "package_version"]
+        index="operation", columns=["package", "version", "version_suffix"]
     )
     # Drop the "secs_taken" level to cleanup legend in chart
     benchmark_maxversion_df = benchmark_maxversion_df.droplevel(level=0, axis=1)
