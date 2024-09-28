@@ -1,15 +1,15 @@
 run_datetime,package,package_version,operation,operation_descr,secs_taken,run_details
 2023-03-22 22:51:12.810491,pygeoprocessing,2.4.0,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,52.998522,{}
 2023-03-23 15:42:53.890171,geowombat,2.1.6,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,83.593633,{}
-2023-11-01 21:32:20.485871,pyjeo,1.1.6 1 threads,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,20.261884,{}
-2023-11-01 21:33:43.207416,pyjeo,1.1.6 2 threads,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,18.131106,{}
-2023-11-01 21:35:01.359175,pyjeo,1.1.6 3 threads,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,16.00101,{}
-2023-11-01 22:05:48.873225,pyjeo,1.1.6 4 threads,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,15.466929,{}
+2023-11-01 21:32:20.485871,pyjeo,1.1.6-1 threads,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,20.261884,{}
+2023-11-01 21:33:43.207416,pyjeo,1.1.6-2 threads,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,18.131106,{}
+2023-11-01 21:35:01.359175,pyjeo,1.1.6-3 threads,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,16.00101,{}
+2023-11-01 22:05:48.873225,pyjeo,1.1.6-4 threads,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,15.466929,{}
 2023-11-01 22:06:50.164708,rasterstats,0.19.0,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,58.699413,{}
 2023-11-01 22:06:58.247831,pyqgis,3.28.10-Firenze,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,4.808703,{}
 2024-05-14 21:59:15.960754,pyqgis,3.36.2-Maidenhead,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,5.111382,{}
 2024-05-14 22:38:25.992798,pyqgis,3.36.2-Maidenhead,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,3.846257,{}
-2024-05-15 00:38:24.908435,exactextract,0.2.0.de0,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI RGB BEFL,3.109397,{}
-2024-05-15 00:38:33.377574,exactextract,0.2.0.de0,zonalstats_3bands,zonalstats of agri parcels (5000 polygons) + S2 NDVI RGB BEFL,5.51328,{}
+2024-05-15 00:38:24.908435,exactextract,0.2.0dev0,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI RGB BEFL,3.109397,{}
+2024-05-15 00:38:33.377574,exactextract,0.2.0dev0,zonalstats_3bands,zonalstats of agri parcels (5000 polygons) + S2 NDVI RGB BEFL,5.51328,{}
 2024-09-28 04:30:27.120237,exactextract,0.2.0,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI RGB BEFL,2.823541,{}
 2024-09-28 04:30:34.433709,exactextract,0.2.0,zonalstats_3bands,zonalstats of agri parcels (5000 polygons) + S2 NDVI RGB BEFL,4.423268,{}

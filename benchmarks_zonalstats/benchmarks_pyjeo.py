@@ -34,7 +34,7 @@ def _get_package() -> str:
 def _get_version() -> str:
     nproc = os.environ.get("OMP_NUM_THREADS")
     if nproc is not None:
-        return f"{pj.__version__} {nproc} threads".replace("v", "")
+        return f"{pj.__version__}-{nproc} threads".replace("v", "")
     else:
         return f"{pj.__version__}".replace("v", "")
 
