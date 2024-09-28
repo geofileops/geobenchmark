@@ -11,3 +11,5 @@ run_datetime,package,package_version,operation,operation_descr,secs_taken,run_de
 2024-05-14 22:38:25.992798,pyqgis,3.36.2-Maidenhead,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI BEFL,3.846257,{}
 2024-05-15 00:38:24.908435,exactextract,0.2.0.de0,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI RGB BEFL,3.109397,{}
 2024-05-15 00:38:33.377574,exactextract,0.2.0.de0,zonalstats_3bands,zonalstats of agri parcels (5000 polygons) + S2 NDVI RGB BEFL,5.51328,{}
+2024-09-28 04:30:27.120237,exactextract,0.2.0,zonalstats_1band,zonalstats of agri parcels (5000 polygons) + S2 NDVI RGB BEFL,2.823541,{}
+2024-09-28 04:30:34.433709,exactextract,0.2.0,zonalstats_3bands,zonalstats of agri parcels (5000 polygons) + S2 NDVI RGB BEFL,4.423268,{}
