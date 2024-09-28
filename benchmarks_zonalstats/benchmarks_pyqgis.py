@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module to benchmark zonalstats.
 """
@@ -17,15 +16,7 @@ from benchmarker import RunResult
 from benchmarks_zonalstats import _common as common
 import testdata
 
-################################################################################
-# Some init
-################################################################################
-
 logger = logging.getLogger(__name__)
-
-################################################################################
-# The real work
-################################################################################
 
 
 def _get_package() -> str:
