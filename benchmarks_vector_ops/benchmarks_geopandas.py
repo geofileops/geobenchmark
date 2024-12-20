@@ -8,20 +8,17 @@ import logging
 from pathlib import Path
 
 from geofileops.util import _geoseries_util as geoseries_util
+import geofileops as gfo
 import geopandas as gpd
+import shapely
 
 from benchmarker import RunResult
 import testdata
 
 logger = logging.getLogger(__name__)
 
-
-def _get_package() -> str:
-    return "geopandas"
-
-
-def _get_version() -> str:
-    return gpd.__version__
+_package = "geopandas"
+_package_version = gpd.__version__
 
 
 def buffer(tmp_dir: Path) -> RunResult:
@@ -47,8 +44,8 @@ def buffer(tmp_dir: Path) -> RunResult:
     gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     result = RunResult(
-        package=_get_package(),
-        package_version=_get_version(),
+        package=_package,
+        package_version=_package_version,
         operation="buffer",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="buffer agri parcels BEFL (~500k polygons)",
@@ -90,8 +87,8 @@ def _clip(tmp_dir: Path) -> RunResult:
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     secs_taken = (datetime.now() - start_time).total_seconds()
     result = RunResult(
-        package=_get_package(),
-        package_version=_get_version(),
+        package=_package,
+        package_version=_package_version,
         operation="clip",
         secs_taken=secs_taken,
         operation_descr="clip of 2 agri parcel layers BEFL (2*~500k polygons)",
@@ -127,8 +124,8 @@ def dissolve(tmp_dir: Path) -> RunResult:
     result_gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     result = RunResult(
-        package=_get_package(),
-        package_version=_get_version(),
+        package=_package,
+        package_version=_package_version,
         operation="dissolve",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="dissolve agri parcels BEFL (~500k polygons)",
@@ -164,8 +161,8 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     result_gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     result = RunResult(
-        package=_get_package(),
-        package_version=_get_version(),
+        package=_package,
+        package_version=_package_version,
         operation="dissolve_groupby",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr=(
@@ -206,8 +203,8 @@ def intersection(tmp_dir: Path) -> RunResult:
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     secs_taken = (datetime.now() - start_time).total_seconds()
     result = RunResult(
-        package=_get_package(),
-        package_version=_get_version(),
+        package=_package,
+        package_version=_package_version,
         operation="intersection",
         secs_taken=secs_taken,
         operation_descr="intersection of 2 agri parcel layers BEFL (2*~500k polygons)",
@@ -222,8 +219,20 @@ def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
 
-    input1_path, input1_descr = testdata.TestFile.COMPLEX_POLYS.get_file(tmp_dir)
-    input2_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input1_path, input1_descr = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    info1 = gfo.get_layerinfo(input1_path)
+    bbox = shapely.box(*info1.total_bounds).buffer(-10_000, join_style="mitre").bounds
+    crs = info1.crs
+    input2_path, input2_descr = testdata.create_testfile(
+        bbox=bbox,
+        geoms=12,
+        polys_per_geom=1,
+        points_per_poly=30_000,
+        poly_width=15_000,
+        poly_height=15_000,
+        crs=crs,
+        dst_dir=tmp_dir,
+    )
 
     start_time = datetime.now()
     input1_gdf = gpd.read_file(input1_path)
@@ -247,13 +256,11 @@ def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     secs_taken = (datetime.now() - start_time).total_seconds()
     result = RunResult(
-        package=_get_package(),
-        package_version=_get_version(),
+        package=_package,
+        package_version=_package_version,
         operation=function_name,
         secs_taken=secs_taken,
-        operation_descr=(
-            f"{function_name} between {input1_descr} and agriparcels BEFL (~500k poly)"
-        ),
+        operation_descr=f"{function_name} between {input1_descr} and {input2_descr}",
     )
 
     # Cleanup and return
@@ -287,8 +294,8 @@ def union(tmp_dir: Path) -> RunResult:
     logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
     secs_taken = (datetime.now() - start_time).total_seconds()
     result = RunResult(
-        package=_get_package(),
-        package_version=_get_version(),
+        package=_package,
+        package_version=_package_version,
         operation="union",
         secs_taken=secs_taken,
         operation_descr="union of 2 agri parcel layers BEFL (2*~500k polygons)",

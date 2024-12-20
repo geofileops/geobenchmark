@@ -77,7 +77,9 @@ def generate_reports(results_path: Path, output_dir: Path):
     )
     benchmark_maxversions_df = (
         benchmark_df[["package", "operation", "version", "version_suffix"]]
-        .sort_values(["package", "operation", "version", "version_suffix"], ascending=False)
+        .sort_values(
+            ["package", "operation", "version", "version_suffix"], ascending=False
+        )
         .groupby(["package", "operation"])
         .first()
         .reset_index()

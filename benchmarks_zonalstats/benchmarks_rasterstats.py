@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 
 def _get_package() -> str:
-    
     return "rasterstats"
 
 
