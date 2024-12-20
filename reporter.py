@@ -270,7 +270,8 @@ def save_chart(
 
     # Open if wanted
     if open_output_file is True:
-        os.startfile(output_path)
+        if os.name == "nt":
+            os.startfile(output_path)
 
 
 if __name__ == "__main__":
