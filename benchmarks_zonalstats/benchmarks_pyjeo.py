@@ -1,6 +1,7 @@
 """
 Module to benchmark zonalstats.
 """
+
 import os
 from datetime import datetime
 import logging
@@ -12,7 +13,7 @@ import geopandas as gpd
 import pyjeo as pj
 
 from benchmarker import RunResult
-from benchmarks_zonalstats import _common as common
+from benchmarks_zonalstats import _zonalstats_common as common
 import testdata
 
 logger = logging.getLogger(__name__)

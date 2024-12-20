@@ -35,7 +35,7 @@ def _get_version() -> str:
 
 class set_env_variables(object):
     def __init__(self, env_variables_to_set: dict):
-        self.env_variables_backup = {}
+        self.env_variables_backup: dict[str, str] = {}
         self.env_variables_to_set = env_variables_to_set
 
     def __enter__(self):
@@ -63,7 +63,10 @@ class set_env_variables(object):
 def write_dataframe(tmp_dir: Path) -> List[RunResult]:
     # Init
     results = []
-    input_path, _, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    (
+        input_path,
+        _,
+    ) = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
     # Go!
     # Read input files
@@ -84,7 +87,7 @@ def write_dataframe(tmp_dir: Path) -> List[RunResult]:
     sqlite_pragma_combinations_tmp = []
     for lengths in range(0, len(sqlite_possible_pragmas) + 1):
         for subset in itertools.combinations(sqlite_possible_pragmas, lengths):
-            sqlite_pragma_combinations_tmp.append(subset)
+            sqlite_pragma_combinations_tmp.append(list(subset))
 
     # Now additionally add some different values for the cache_size pragma
     sqlite_caches_sizes = {
