@@ -9,30 +9,23 @@ import multiprocessing
 from pathlib import Path
 
 import geofileops as gfo
+import shapely
 
 from benchmarker import RunResult
 import testdata
 
 logger = logging.getLogger(__name__)
 
+_package = "geofileops"
+_package_version = gfo.__version__
+_nb_parallel = 12
 
-def _get_package() -> str:
-    return "geofileops"
-
-
-def _get_version() -> str:
-    return gfo.__version__
-
-
-def _get_nb_parallel() -> int:
-    nb_parallel = 12
-    nb_cores = multiprocessing.cpu_count()
-    if nb_cores < nb_parallel:
-        logger.warning(
-            f"nb_parallel specified ({nb_parallel}) > nb logical cores available "
-            f"({nb_cores})"
-        )
-    return nb_parallel
+nb_cores = multiprocessing.cpu_count()
+if nb_cores < _nb_parallel:
+    logger.warning(
+        f"nb_parallel specified ({_nb_parallel}) > nb logical cores available "
+        f"({nb_cores})"
+    )
 
 
 def buffer(tmp_dir: Path) -> RunResult:
@@ -43,15 +36,15 @@ def buffer(tmp_dir: Path) -> RunResult:
     start_time = datetime.now()
     output_path = tmp_dir / f"{input_path.stem}_buf.gpkg"
     gfo.buffer(
-        input_path, output_path, distance=1, force=True, nb_parallel=_get_nb_parallel()
+        input_path, output_path, distance=1, force=True, nb_parallel=_nb_parallel
     )
     result = RunResult(
-        package=_get_package(),
-        package_version=_get_version(),
+        package=_package,
+        package_version=_package_version,
         operation="buffer",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="buffer on agri parcel layer BEFL (~500k polygons)",
-        run_details={"nb_cpu": _get_nb_parallel()},
+        run_details={"nb_cpu": _nb_parallel},
     )
 
     # Cleanup and return
@@ -75,7 +68,7 @@ def _clip(tmp_dir: Path) -> RunResult:
         clip_path=input2_path,
         output_path=output_path,
         force=True,
-        nb_parallel=_get_nb_parallel(),
+        nb_parallel=_nb_parallel,
     )
     result = RunResult(
         package="geofileops",
@@ -83,7 +76,7 @@ def _clip(tmp_dir: Path) -> RunResult:
         operation="clip",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="clip of 2 agri parcel layers BEFL (2*~500k polygons)",
-        run_details={"nb_cpu": _get_nb_parallel()},
+        run_details={"nb_cpu": _nb_parallel},
     )
 
     # Cleanup and return
@@ -103,15 +96,15 @@ def dissolve_nogroupby(tmp_dir: Path) -> RunResult:
         output_path=output_path,
         explodecollections=True,
         force=True,
-        nb_parallel=_get_nb_parallel(),
+        nb_parallel=_nb_parallel,
     )
     result = RunResult(
-        package=_get_package(),
-        package_version=_get_version(),
+        package=_package,
+        package_version=_package_version,
         operation="dissolve",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="dissolve on agri parcels BEFL (~500k polygons)",
-        run_details={"nb_cpu": _get_nb_parallel()},
+        run_details={"nb_cpu": _nb_parallel},
     )
 
     # Cleanup and return
@@ -132,17 +125,17 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
         groupby_columns=["GWSGRPH_LB"],
         explodecollections=True,
         force=True,
-        nb_parallel=_get_nb_parallel(),
+        nb_parallel=_nb_parallel,
     )
     result = RunResult(
-        package=_get_package(),
-        package_version=_get_version(),
+        package=_package,
+        package_version=_package_version,
         operation="dissolve_groupby",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr=(
             "dissolve on agri parcels BEFL (~500k polygons), groupby=[GWSGRPH_LB]"
         ),
-        run_details={"nb_cpu": _get_nb_parallel()},
+        run_details={"nb_cpu": _nb_parallel},
     )
 
     # Cleanup and return
@@ -163,15 +156,15 @@ def intersection(tmp_dir: Path) -> RunResult:
         input2_path=input2_path,
         output_path=output_path,
         force=True,
-        nb_parallel=_get_nb_parallel(),
+        nb_parallel=_nb_parallel,
     )
     result = RunResult(
-        package=_get_package(),
-        package_version=_get_version(),
+        package=_package,
+        package_version=_package_version,
         operation="intersection",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="intersection of 2 agri parcel layers BEFL (2*~500k polygons)",
-        run_details={"nb_cpu": _get_nb_parallel()},
+        run_details={"nb_cpu": _nb_parallel},
     )
 
     # Cleanup and return
@@ -189,8 +182,7 @@ def _join_by_location_intersects(tmp_dir: Path) -> RunResult:
     # Go!
     start_time = datetime.now()
     output_path = (
-        tmp_dir
-        / f"{input1_path.stem}_join_inters_{input2_path.stem}_{_get_package()}.gpkg"
+        tmp_dir / f"{input1_path.stem}_join_inters_{input2_path.stem}_{_package}.gpkg"
     )
     gfo.join_by_location(
         input1_path=input1_path,
@@ -198,19 +190,19 @@ def _join_by_location_intersects(tmp_dir: Path) -> RunResult:
         output_path=output_path,
         spatial_relations_query="intersects is True",
         force=True,
-        nb_parallel=_get_nb_parallel(),
+        nb_parallel=_nb_parallel,
     )
 
     result = RunResult(
-        package=_get_package(),
-        package_version=_get_version(),
+        package=_package,
+        package_version=_package_version,
         operation=function_name,
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr=(
             "join_by_location_intersects between 2 agri parcel layers BEFL "
             "(2*~500.000 polygons)"
         ),
-        run_details={"nb_cpu": _get_nb_parallel()},
+        run_details={"nb_cpu": _nb_parallel},
     )
 
     # Cleanup and return
@@ -223,8 +215,20 @@ def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
 
-    input1_path, input1_descr = testdata.TestFile.COMPLEX_POLYS.get_file(tmp_dir)
-    input2_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input1_path, input1_descr = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    info1 = gfo.get_layerinfo(input1_path)
+    bbox = shapely.box(*info1.total_bounds).buffer(-10_000, join_style="mitre").bounds
+    crs = info1.crs
+    input2_path, input2_descr = testdata.create_testfile(
+        bbox=bbox,
+        geoms=12,
+        polys_per_geom=1,
+        points_per_poly=30_000,
+        poly_width=15_000,
+        poly_height=15_000,
+        crs=crs,
+        dst_dir=tmp_dir,
+    )
 
     # Go!
     start_time = datetime.now()
@@ -233,23 +237,19 @@ def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
         input1_path=input1_path,
         input2_path=input2_path,
         output_path=output_path,
-        nb_parallel=_get_nb_parallel(),
+        nb_parallel=_nb_parallel,
         force=True,
     )
     result = RunResult(
-        package=_get_package(),
-        package_version=_get_version(),
+        package=_package,
+        package_version=_package_version,
         operation=function_name,
         secs_taken=(datetime.now() - start_time).total_seconds(),
-        operation_descr=(
-            f"symmetric difference between {input1_descr} and agriparcels BEFL "
-            "(~500k poly)"
-        ),
-        run_details={"nb_cpu": _get_nb_parallel()},
+        operation_descr=f"{function_name} between {input1_descr} and {input2_descr}",
+        run_details={"nb_cpu": _nb_parallel},
     )
 
     # Cleanup and return
-    logger.info(f"nb features in result: {gfo.get_layerinfo(output_path).featurecount}")
     output_path.unlink()
     return result
 
@@ -267,15 +267,15 @@ def union(tmp_dir: Path) -> RunResult:
         input2_path=input2_path,
         output_path=output_path,
         force=True,
-        nb_parallel=_get_nb_parallel(),
+        nb_parallel=_nb_parallel,
     )
     result = RunResult(
-        package=_get_package(),
-        package_version=_get_version(),
+        package=_package,
+        package_version=_package_version,
         operation="union",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="union of 2 agri parcel layers BEFL (2*~500k polygons)",
-        run_details={"nb_cpu": _get_nb_parallel()},
+        run_details={"nb_cpu": _nb_parallel},
     )
 
     # Cleanup and return

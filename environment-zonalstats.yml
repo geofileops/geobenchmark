@@ -6,8 +6,9 @@ dependencies:
   - pip
   # required
   - geofileops
-  - geopandas
+  - geopandas-base
   - geowombat
+  - matplotlib-base
   - pygeoprocessing
   - rasterstats
   # linting

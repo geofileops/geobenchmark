@@ -6,7 +6,8 @@ dependencies:
   - pip
   # required
   - geofileops
-  - geopandas
+  - geopandas-base
+  - matplotlib-base
   - qgis
   # linting
   - ruff

@@ -7,7 +7,8 @@ dependencies:
   # required
   - dask-geopandas
   - geofileops
-  - geopandas
+  - geopandas-base
+  - matplotlib-base
   - pyogrio
   # linting
   - ruff
