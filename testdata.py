@@ -254,7 +254,7 @@ def _create_complex_poly_points(
             )
             nb_points_extra = int((nb_points - nb_points_created) / 2)
             nb_points_estimate += nb_points_extra
-            line_distance_estimate = _estimate_line_distance(nb_points_estimate)
+            line_distance_estimate = _estimate_line_distance(nb_points_estimate, width)
         elif nb_points_created > nb_points_max:
             # Too many points... decrease nb_points_estimate
             logger.info(
@@ -351,7 +351,7 @@ def _create_complex_square_poly(
     height = width
 
     # Vertical lines
-    for x_offset in range(0, 0 + width, line_distance):
+    for x_offset in range(0, 0 + int(width), line_distance):
         lines.append(
             shapely.LineString(
                 [(xmin + x_offset, ymin), (xmin + x_offset, ymin + height)]
@@ -359,7 +359,7 @@ def _create_complex_square_poly(
         )
 
     # Horizontal lines
-    for y_offset in range(0, 0 + height, line_distance):
+    for y_offset in range(0, 0 + int(height), line_distance):
         lines.append(
             shapely.LineString(
                 [(xmin, ymin + y_offset), (xmin + width, ymin + y_offset)]
@@ -479,7 +479,6 @@ def _determine_number_points(width: float):
             xmin=0,
             ymin=0,
             width=width,
-            height=width,
             line_distance=line_distance,
             max_segment_length=100,
         )

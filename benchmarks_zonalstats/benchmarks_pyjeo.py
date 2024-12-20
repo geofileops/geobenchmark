@@ -1,6 +1,7 @@
 """
 Module to benchmark zonalstats.
 """
+
 import os
 from datetime import datetime
 import logging
@@ -12,7 +13,7 @@ import geopandas as gpd
 import pyjeo as pj
 
 from benchmarker import RunResult
-from benchmarks_zonalstats import _common as common
+from benchmarks_zonalstats import _common
 import testdata
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
     raster_path, _ = testdata.TestFile.S2_NDVI_2020.get_file(tmp_dir)
 
     # Prepare a sample of the parcels, otherwise to slow
-    nb_poly = common.nb_polygons_for_test
+    nb_poly = _common.nb_polygons_for_test
     vector_gdf = gpd.read_file(vector_path, rows=slice(0, nb_poly))
     vector_tmp_path = tmp_dir / "vector_input.gpkg"
     vector_gdf.to_file(vector_tmp_path)

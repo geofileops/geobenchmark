@@ -4,7 +4,6 @@ Module to generate reports for benchmarks.
 
 import ast
 import math
-import os
 from pathlib import Path
 import shutil
 import tempfile
@@ -119,7 +118,6 @@ def save_chart(
     yscale: Optional[Literal["linear", "log", "symlog", "logit"]] = None,
     y_value_formatter: Optional[str] = None,
     print_labels_on_points: bool = False,
-    open_output_file: bool = False,
     size: Tuple[float, float] = (8, 4),
     plot_kind: Literal[
         "line",
@@ -151,7 +149,6 @@ def save_chart(
               - {0:.2f} for a float with two decimals.
             Defaults to None.
         print_labels_on_points (bool, optional): _description_. Defaults to False.
-        open_output_file (bool, optional): _description_. Defaults to False.
         size (Tuple[float, float], optional): _description_. Defaults to (8, 4).
         plot_kind (str, optional): _description_. Defaults to "line".
         gridlines (str, optional): where to draw grid lines:
@@ -267,10 +264,6 @@ def save_chart(
                 shutil.move(tmp_output_path, output_path)
 
     plt.close(fig)
-
-    # Open if wanted
-    if open_output_file is True:
-        os.startfile(output_path)
 
 
 if __name__ == "__main__":

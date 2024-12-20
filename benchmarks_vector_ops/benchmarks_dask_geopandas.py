@@ -247,8 +247,8 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
 
 def join_by_location_intersects(tmp_dir: Path) -> RunResult:
     # Init-
-    input1_path = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
-    input2_path = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
+    input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
 
     ### Go! ###
     # Read input files
