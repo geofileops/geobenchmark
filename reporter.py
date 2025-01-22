@@ -92,6 +92,11 @@ def generate_reports(results_path: Path, output_dir: Path):
             benchmark_maxversion_df.index.isin(benchmark_maxversions_df.index)
         ].reset_index()
     )[["package", "version", "version_suffix", "operation", "secs_taken"]]
+    # Only keep the last benchmark result value for the same package+operation+version,
+    # otherwise pivot_table takes the average seconds
+    benchmark_maxversion_df = benchmark_maxversion_df.groupby(
+        by=["package", "version", "version_suffix","operation"]
+    ).last().reset_index()
     benchmark_maxversion_df = benchmark_maxversion_df.pivot_table(
         index="operation", columns=["package", "version", "version_suffix"]
     )
