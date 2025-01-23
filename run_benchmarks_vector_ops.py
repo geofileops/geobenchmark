@@ -8,11 +8,11 @@ def main():
         benchmarker.run_benchmarks(
             benchmarks_subdir="benchmarks_vector_ops",
             results_subdir="results_vector_ops",
-            # modules=["benchmarks_geofileops"],
-            modules=["benchmarks_geopandas"],
+            modules=["benchmarks_geofileops"],
+            # modules=["benchmarks_geopandas"],
             # modules=["benchmarks_dask_geopandas"],
             # functions=["buffer"],
-            # functions=["symdif_complexpolys_agri"],
+            functions=["symdif_complexpolys_agri"],
         )
         return
 

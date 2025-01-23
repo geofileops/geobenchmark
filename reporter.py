@@ -94,9 +94,13 @@ def generate_reports(results_path: Path, output_dir: Path):
     )[["package", "version", "version_suffix", "operation", "secs_taken"]]
     # Only keep the last benchmark result value for the same package+operation+version,
     # otherwise pivot_table takes the average seconds
-    benchmark_maxversion_df = benchmark_maxversion_df.groupby(
-        by=["package", "version", "version_suffix","operation"]
-    ).last().reset_index()
+    benchmark_maxversion_df = (
+        benchmark_maxversion_df.groupby(
+            by=["package", "version", "version_suffix", "operation"]
+        )
+        .last()
+        .reset_index()
+    )
     benchmark_maxversion_df = benchmark_maxversion_df.pivot_table(
         index="operation", columns=["package", "version", "version_suffix"]
     )
@@ -105,7 +109,7 @@ def generate_reports(results_path: Path, output_dir: Path):
     results_report_path = output_dir / "GeoBenchmark.png"
     save_chart(
         df=benchmark_maxversion_df,
-        title="Comparison of libraries, time in sec",
+        title="Comparison of libraries, time in sec\n",
         output_path=results_report_path,
         yscale="log",
         print_labels_on_points=True,
@@ -144,8 +148,8 @@ def save_chart(
     Render and save a chart.
 
     Args:
-        df (pd.DataFrame): _description_
-        title (str): _description_
+        df (pd.DataFrame): The data to plot. The index should be the x axis values.
+        title (str): The title of the chart.
         output_path (Path): _description_
         yscale (Literal["linear", "log", "symlog", "logit"], optional): y scale to use.
         y_value_formatter (str, optional): a formatter for the y axes and
@@ -272,8 +276,8 @@ def save_chart(
 
 
 if __name__ == "__main__":
-    # results_dir = Path(__file__).resolve().parent / "results_vector_ops"
-    results_dir = Path(__file__).resolve().parent / "results_zonalstats"
+    results_dir = Path(__file__).resolve().parent / "results_vector_ops"
+    # results_dir = Path(__file__).resolve().parent / "results_zonalstats"
     results_path = results_dir / "benchmark_results.csv"
     output_dir = results_dir
     generate_reports(results_path, output_dir)

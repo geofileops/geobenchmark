@@ -212,6 +212,20 @@ def _join_by_location_intersects(tmp_dir: Path) -> RunResult:
 
 
 def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
+    """Symmetric difference between very complex polygons and standard polygons.
+
+    The complex polygons are created as such:
+
+        - each geometry is a multipolygon with several polygons
+        - each polygon has a large number of points
+        - the area for each (multipolygon) is a lot larger than the standard polygons,
+          so each complex polygon interacts with many standard polygons
+
+    Changelog:
+
+        - 2025-01-23: make complex polygons a lot more complex to be able to see the
+          difference between geofileops 0.9.1 and 0.10.0
+    """
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
 
@@ -221,11 +235,11 @@ def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
     crs = info1.crs
     input2_path, input2_descr = testdata.create_testfile(
         bbox=bbox,
-        geoms=12,
-        polys_per_geom=1,
+        geoms=3,
+        polys_per_geom=4,
         points_per_poly=30_000,
-        poly_width=15_000,
-        poly_height=15_000,
+        poly_width=30_000,
+        poly_height=30_000,
         crs=crs,
         dst_dir=tmp_dir,
     )
