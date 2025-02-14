@@ -11,5 +11,8 @@ dependencies:
   - matplotlib-base
   - pyogrio
   # linting
+  - mypy
+  - pandas-stubs
   - ruff
   - pre-commit
+  
