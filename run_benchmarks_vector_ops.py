@@ -12,7 +12,7 @@ def main():
             # modules=["benchmarks_geopandas"],
             # modules=["benchmarks_dask_geopandas"],
             # functions=["buffer"],
-            functions=["symdif_complexpolys_agri"],
+            # functions=["symdif_complexpolys_agri"],
         )
         return
 
