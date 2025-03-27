@@ -215,7 +215,7 @@ def intersection(tmp_dir: Path) -> RunResult:
     return result
 
 
-def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
+def _symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
     """Symmetric difference between very complex polygons and standard polygons.
 
     The complex polygons are created as such:

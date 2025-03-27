@@ -2,14 +2,15 @@ name: geobenchmark-vector-ops
 channels:
   - conda-forge
 dependencies:
-  - python=3.11
-  - pip
+  - python=3.12
   # required
   - dask-geopandas
   - geofileops
   - geopandas-base
   - matplotlib-base
-  - pyogrio
   # linting
+  - mypy
+  - pandas-stubs
   - ruff
   - pre-commit
+  
