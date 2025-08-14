@@ -6,6 +6,7 @@ import pprint
 import shutil
 import tempfile
 import urllib.request
+import warnings
 import zipfile
 from pathlib import Path
 from typing import Optional, Union
@@ -79,12 +80,15 @@ class TestFile(enum.Enum):
         testfile_path = _download_samplefile(
             url=self.url, dst_name=self.filename, dst_dir=output_dir
         )
-        testfile_info = gfo.get_layerinfo(testfile_path)
-        logger.debug(
-            f"TestFile {self.name} contains {testfile_info.featurecount} rows."
-        )
-        count_kilo = f"{int(testfile_info.featurecount / 1000)}k"
-        description = f"agri parcels ({count_kilo} polys)"
+        if testfile_path.suffix.lower() in (".gpkg", ".shp"):
+            testfile_info = gfo.get_layerinfo(testfile_path)
+            logger.debug(
+                f"TestFile {self.name} contains {testfile_info.featurecount} rows."
+            )
+            count_kilo = f"{int(testfile_info.featurecount / 1000)}k"
+            description = f"agri parcels ({count_kilo} polys)"
+        else:
+            description = self.descr or testfile_path.stem
 
         return (testfile_path, description)
 
@@ -439,21 +443,32 @@ def _download_samplefile(
 
                 # Look for the file
                 tmp_paths = []
-                for suffix in [".shp", ".gpkg"]:
+                for suffix in [".shp", ".gpkg", ".tif"]:
                     tmp_paths.extend(list(unzippedzip_dir.rglob(f"*{suffix}")))
-                if len(tmp_paths) == 1:
+                if len(tmp_paths) == 0:
+                    raise RuntimeError(
+                        f"Could not find any geofile in {unzippedzip_dir}"
+                    )
+                elif len(tmp_paths) == 1:
                     tmp_path = tmp_paths[0]
                 else:
-                    raise Exception(
-                        f"Should find 1 geofile, found {len(tmp_paths)}: \n"
-                        f"{pprint.pformat(tmp_paths)}"
+                    tmp_path = tmp_paths[0]
+                    warnings.warn(
+                        f"Should find 1 geofile, found {len(tmp_paths)}. "
+                        f"Will use first.\n{pprint.pformat(tmp_paths)}"
                     )
 
-            if dst_path.suffix == tmp_path.suffix:
-                gfo.move(tmp_path, dst_path)
+            if tmp_path.suffix.lower() in (".gpkg", ".shp"):
+                if dst_path.suffix == tmp_path.suffix:
+                    gfo.move(tmp_path, dst_path)
+                else:
+                    logger.info(f"Convert tmp file to {dst_path}")
+                    gfo.makevalid(tmp_path, dst_path, keep_empty_geoms=False)
             else:
-                logger.info(f"Convert tmp file to {dst_path}")
-                gfo.makevalid(tmp_path, dst_path, keep_empty_geoms=False)
+                if dst_path.suffix == tmp_path.suffix:
+                    shutil.move(tmp_path, dst_path)
+                else:
+                    raise ValueError(f"Cannot convert {tmp_path} to {dst_path}")
         finally:
             shutil.rmtree(tmp_dir, ignore_errors=True)
 

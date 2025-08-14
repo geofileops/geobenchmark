@@ -13,6 +13,7 @@ def main():
             # modules=["benchmarks_geowombat"],
             # modules=["benchmarks_pyqgis"],
             modules=["benchmarks_exactextract"],
+            functions=["zonalstats_1band"],
         )
         return
 
