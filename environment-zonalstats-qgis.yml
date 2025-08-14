@@ -1,4 +1,4 @@
-name: zonalstats-qgis
+name: geobenchmark-zonalstats-qgis
 channels:
   - conda-forge
 dependencies:
@@ -10,5 +10,6 @@ dependencies:
   - matplotlib-base
   - qgis
   # linting
-  - ruff
+  - mypy =1.8.0
   - pre-commit
+  - ruff =0.8.2
