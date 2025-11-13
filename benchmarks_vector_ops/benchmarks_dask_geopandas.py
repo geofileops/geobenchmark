@@ -38,7 +38,7 @@ def buffer(tmp_dir: Path) -> RunResult:
     # Read input file
     start_time = datetime.now()
     gdf = pyogrio.read_dataframe(input_path)
-    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    logger.info(f"time for read: {(datetime.now() - start_time).total_seconds()}")
 
     # Buffer
     start_time_buffer = datetime.now()
@@ -47,7 +47,7 @@ def buffer(tmp_dir: Path) -> RunResult:
     dgdf.geometry = dgdf.geometry.buffer(distance=1, resolution=5).compute()
     assert isinstance(dgdf, dgpd.GeoDataFrame)
     logger.info(
-        f"time for buffer: {(datetime.now()-start_time_buffer).total_seconds()}"
+        f"time for buffer: {(datetime.now() - start_time_buffer).total_seconds()}"
     )
 
     # Write to output file
@@ -68,7 +68,7 @@ def buffer(tmp_dir: Path) -> RunResult:
     pyogrio.write_dataframe(
         result_gdf, output_path, layer=output_path.stem, driver="GPKG"
     )
-    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    logger.info(f"write took {(datetime.now() - start_time_write).total_seconds()}")
     result = RunResult(
         package=_package,
         package_version=_package_version,
@@ -112,14 +112,16 @@ def _clip(tmp_dir: Path) -> RunResult:
     start_time = datetime.now()
     input1_gdf = pyogrio.read_dataframe(input1_path)
     input2_gdf = pyogrio.read_dataframe(input2_path)
-    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    logger.info(f"time for read: {(datetime.now() - start_time).total_seconds()}")
 
     # Apply operation
     start_time_op = datetime.now()
     input1_dgdf = dgpd.from_geopandas(input1_gdf, npartitions=_nb_parallel)
     result_dgdf = dgpd.clip(input1_dgdf, input2_gdf, keep_geom_type=True)
     result_gdf = result_dgdf.compute()
-    logger.info(f"time for operation: {(datetime.now()-start_time_op).total_seconds()}")
+    logger.info(
+        f"time for operation: {(datetime.now() - start_time_op).total_seconds()}"
+    )
 
     # Write to output file
     start_time_write = datetime.now()
@@ -131,7 +133,7 @@ def _clip(tmp_dir: Path) -> RunResult:
     pyogrio.write_dataframe(
         result_gdf, output_path, layer=output_path.stem, driver="GPKG"
     )
-    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    logger.info(f"write took {(datetime.now() - start_time_write).total_seconds()}")
     secs_taken = (datetime.now() - start_time).total_seconds()
     result = RunResult(
         package=_package,
@@ -154,7 +156,7 @@ def dissolve(tmp_dir: Path) -> RunResult:
     # Read input file
     start_time = datetime.now()
     gdf = pyogrio.read_dataframe(input_path)
-    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    logger.info(f"time for read: {(datetime.now() - start_time).total_seconds()}")
 
     # dissolve
     start_time_dissolve = datetime.now()
@@ -163,7 +165,7 @@ def dissolve(tmp_dir: Path) -> RunResult:
     dgdf = dgdf.explode()
     result_gdf = dgdf.compute()
     logger.info(
-        f"time for dissolve: {(datetime.now()-start_time_dissolve).total_seconds()}"
+        f"time for dissolve: {(datetime.now() - start_time_dissolve).total_seconds()}"
     )
 
     # Write to output file
@@ -177,7 +179,7 @@ def dissolve(tmp_dir: Path) -> RunResult:
     pyogrio.write_dataframe(
         result_gdf, output_path, layer=output_path.stem, driver="GPKG"
     )
-    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    logger.info(f"write took {(datetime.now() - start_time_write).total_seconds()}")
     result = RunResult(
         package=_package,
         package_version=_package_version,
@@ -199,7 +201,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     # Read input file
     start_time = datetime.now()
     gdf = pyogrio.read_dataframe(input_path)
-    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    logger.info(f"time for read: {(datetime.now() - start_time).total_seconds()}")
 
     # dissolve
     start_time_dissolve = datetime.now()
@@ -209,7 +211,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     dgdf = dgdf.explode()
     result_gdf = dgdf.compute()
     logger.info(
-        f"time for dissolve: {(datetime.now()-start_time_dissolve).total_seconds()}"
+        f"time for dissolve: {(datetime.now() - start_time_dissolve).total_seconds()}"
     )
 
     # Write to output file
@@ -228,7 +230,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     pyogrio.write_dataframe(
         result_gdf, output_path, layer=output_path.stem, driver="GPKG"
     )
-    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    logger.info(f"write took {(datetime.now() - start_time_write).total_seconds()}")
 
     result = RunResult(
         package=_package,
@@ -255,7 +257,7 @@ def join_by_location_intersects(tmp_dir: Path) -> RunResult:
     start_time = datetime.now()
     input1_gdf = pyogrio.read_dataframe(input1_path)
     input2_gdf = pyogrio.read_dataframe(input2_path)
-    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    logger.info(f"time for read: {(datetime.now() - start_time).total_seconds()}")
 
     # intersect
     start_time_operation = datetime.now()
@@ -263,7 +265,7 @@ def join_by_location_intersects(tmp_dir: Path) -> RunResult:
     joined_dgdf = dgpd.sjoin(input1_dgdf, input2_gdf, predicate="intersects")
     result_gdf = joined_dgdf.compute()
     logger.info(
-        f"time for intersect: {(datetime.now()-start_time_operation).total_seconds()}"
+        f"time for intersect: {(datetime.now() - start_time_operation).total_seconds()}"
     )
 
     # Write to output file
@@ -275,7 +277,7 @@ def join_by_location_intersects(tmp_dir: Path) -> RunResult:
         result_gdf, output_path, layer=output_path.stem, driver="GPKG"
     )
 
-    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    logger.info(f"write took {(datetime.now() - start_time_write).total_seconds()}")
     result = RunResult(
         package=_package,
         package_version=_package_version,

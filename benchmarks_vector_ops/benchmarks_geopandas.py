@@ -29,20 +29,20 @@ def buffer(tmp_dir: Path) -> RunResult:
     # Read input file
     start_time = datetime.now()
     gdf = gpd.read_file(input_path)
-    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    logger.info(f"time for read: {(datetime.now() - start_time).total_seconds()}")
 
     # Buffer
     start_time_buffer = datetime.now()
     gdf.geometry = gdf.geometry.buffer(distance=1, resolution=5)
     logger.info(
-        f"time for buffer: {(datetime.now()-start_time_buffer).total_seconds()}"
+        f"time for buffer: {(datetime.now() - start_time_buffer).total_seconds()}"
     )
 
     # Write to output file
     start_time_write = datetime.now()
     output_path = tmp_dir / f"{input_path.stem}_geopandas_buf.gpkg"
     gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
-    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    logger.info(f"write took {(datetime.now() - start_time_write).total_seconds()}")
     result = RunResult(
         package=_package,
         package_version=_package_version,
@@ -70,12 +70,12 @@ def _clip(tmp_dir: Path) -> RunResult:
     start_time = datetime.now()
     input1_gdf = gpd.read_file(input1_path)
     input2_gdf = gpd.read_file(input2_path)
-    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    logger.info(f"time for read: {(datetime.now() - start_time).total_seconds()}")
 
     # clip
     start_time_op = datetime.now()
     result_gdf = gpd.clip(input1_gdf, input2_gdf, keep_geom_type=True)
-    logger.info(f"time for clip: {(datetime.now()-start_time_op).total_seconds()}")
+    logger.info(f"time for clip: {(datetime.now() - start_time_op).total_seconds()}")
 
     # Write to output file
     start_time_write = datetime.now()
@@ -84,7 +84,7 @@ def _clip(tmp_dir: Path) -> RunResult:
     result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
     output_path = tmp_dir / f"{input1_path.stem}_clip_{input2_path.stem}.gpkg"
     result_gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
-    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    logger.info(f"write took {(datetime.now() - start_time_write).total_seconds()}")
     secs_taken = (datetime.now() - start_time).total_seconds()
     result = RunResult(
         package=_package,
@@ -107,7 +107,7 @@ def dissolve(tmp_dir: Path) -> RunResult:
     # Read input file
     start_time = datetime.now()
     gdf = gpd.read_file(input_path)
-    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    logger.info(f"time for read: {(datetime.now() - start_time).total_seconds()}")
 
     # dissolve
     start_time_dissolve = datetime.now()
@@ -115,14 +115,14 @@ def dissolve(tmp_dir: Path) -> RunResult:
     assert isinstance(result_gdf, gpd.GeoDataFrame)
     result_gdf = result_gdf.explode(ignore_index=True)
     logger.info(
-        f"time for dissolve: {(datetime.now()-start_time_dissolve).total_seconds()}"
+        f"time for dissolve: {(datetime.now() - start_time_dissolve).total_seconds()}"
     )
 
     # Write to output file
     start_time_write = datetime.now()
     output_path = tmp_dir / f"{input_path.stem}_geopandas_diss.gpkg"
     result_gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
-    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    logger.info(f"write took {(datetime.now() - start_time_write).total_seconds()}")
     result = RunResult(
         package=_package,
         package_version=_package_version,
@@ -144,7 +144,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     # Read input file
     start_time = datetime.now()
     gdf = gpd.read_file(input_path)
-    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    logger.info(f"time for read: {(datetime.now() - start_time).total_seconds()}")
 
     # dissolve
     start_time_dissolve = datetime.now()
@@ -152,14 +152,14 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     assert isinstance(result_gdf, gpd.GeoDataFrame)
     result_gdf = result_gdf.explode(ignore_index=True)
     logger.info(
-        f"time for dissolve: {(datetime.now()-start_time_dissolve).total_seconds()}"
+        f"time for dissolve: {(datetime.now() - start_time_dissolve).total_seconds()}"
     )
 
     # Write to output file
     start_time_write = datetime.now()
     output_path = tmp_dir / f"{input_path.stem}_geopandas_diss_groupby.gpkg"
     result_gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
-    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    logger.info(f"write took {(datetime.now() - start_time_write).total_seconds()}")
     result = RunResult(
         package=_package,
         package_version=_package_version,
@@ -185,13 +185,13 @@ def intersection(tmp_dir: Path) -> RunResult:
     start_time = datetime.now()
     input1_gdf = gpd.read_file(input1_path)
     input2_gdf = gpd.read_file(input2_path)
-    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    logger.info(f"time for read: {(datetime.now() - start_time).total_seconds()}")
 
     # intersection
     start_time_op = datetime.now()
     result_gdf = input1_gdf.overlay(input2_gdf, how="intersection")
     logger.info(
-        f"time for intersection: {(datetime.now()-start_time_op).total_seconds()}"
+        f"time for intersection: {(datetime.now() - start_time_op).total_seconds()}"
     )
 
     # Write to output file
@@ -200,7 +200,7 @@ def intersection(tmp_dir: Path) -> RunResult:
     result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
     output_path = tmp_dir / f"{input1_path.stem}_inters_{input2_path.stem}.gpkg"
     result_gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
-    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    logger.info(f"write took {(datetime.now() - start_time_write).total_seconds()}")
     secs_taken = (datetime.now() - start_time).total_seconds()
     result = RunResult(
         package=_package,
@@ -251,14 +251,14 @@ def _symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
     start_time = datetime.now()
     input1_gdf = gpd.read_file(input1_path)
     input2_gdf = gpd.read_file(input2_path)
-    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    logger.info(f"time for read: {(datetime.now() - start_time).total_seconds()}")
 
     # symmetric_difference
     start_time_op = datetime.now()
     result_gdf = input1_gdf.overlay(input2_gdf, how="symmetric_difference")
     logger.info(
         "time for symmetric_difference: "
-        f"{(datetime.now()-start_time_op).total_seconds()}"
+        f"{(datetime.now() - start_time_op).total_seconds()}"
     )
 
     # Write to output file
@@ -267,7 +267,7 @@ def _symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
     result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
     output_path = tmp_dir / f"{input1_path.stem}_symdif_{input2_path.stem}.gpkg"
     result_gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
-    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    logger.info(f"write took {(datetime.now() - start_time_write).total_seconds()}")
     secs_taken = (datetime.now() - start_time).total_seconds()
     result = RunResult(
         package=_package,
@@ -292,12 +292,14 @@ def union(tmp_dir: Path) -> RunResult:
     start_time = datetime.now()
     input1_gdf = gpd.read_file(input1_path)
     input2_gdf = gpd.read_file(input2_path)
-    logger.info(f"time for read: {(datetime.now()-start_time).total_seconds()}")
+    logger.info(f"time for read: {(datetime.now() - start_time).total_seconds()}")
 
     # union
     start_time_union = datetime.now()
     result_gdf = input1_gdf.overlay(input2_gdf, how="union")
-    logger.info(f"time for union: {(datetime.now()-start_time_union).total_seconds()}")
+    logger.info(
+        f"time for union: {(datetime.now() - start_time_union).total_seconds()}"
+    )
 
     # Write to output file
     start_time_write = datetime.now()
@@ -305,7 +307,7 @@ def union(tmp_dir: Path) -> RunResult:
     result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
     output_path = tmp_dir / f"{input1_path.stem}_union_{input2_path.stem}.gpkg"
     result_gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
-    logger.info(f"write took {(datetime.now()-start_time_write).total_seconds()}")
+    logger.info(f"write took {(datetime.now() - start_time_write).total_seconds()}")
     secs_taken = (datetime.now() - start_time).total_seconds()
     result = RunResult(
         package=_package,
