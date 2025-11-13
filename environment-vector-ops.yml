@@ -9,7 +9,7 @@ dependencies:
   - geopandas-base
   - matplotlib-base
   # linting
-  - mypy =1.8.0
+  - mypy =1.18.2
   - pandas-stubs
   - pre-commit
   - ruff =0.8.2
