@@ -10,7 +10,7 @@ from pathlib import Path
 import dask_geopandas as dgpd
 
 import geofileops as gfo
-from geofileops.util import geoseries_util
+from geofileops.util import _geoseries_util
 import pyogrio
 
 from benchmarker import RunResult
@@ -62,7 +62,7 @@ def buffer(tmp_dir: Path) -> RunResult:
     result_gdf = dgdf.compute()
     # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
     # Remark: the harmonization would ideally also be done in parallel
-    result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    result_gdf.geometry = _geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
 
     output_path = tmp_dir / f"{input_path.stem}_{_package}_buf.gpkg"
     pyogrio.write_dataframe(
@@ -173,7 +173,7 @@ def dissolve(tmp_dir: Path) -> RunResult:
 
     # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
     # Remark: the harmonization would ideally also be done in parallel
-    result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    result_gdf.geometry = _geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
 
     output_path = tmp_dir / f"{input_path.stem}_{_package}_diss.gpkg"
     pyogrio.write_dataframe(
@@ -224,7 +224,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
 
     # Harmonize, otherwise invalid gpkg because mixed poly and multipoly
     # Remark: the harmonization would ideally also be done in parallel
-    result_gdf.geometry = geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+    result_gdf.geometry = _geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
 
     output_path = tmp_dir / f"{input_path.stem}_{_package}_diss_groupby.gpkg"
     pyogrio.write_dataframe(
