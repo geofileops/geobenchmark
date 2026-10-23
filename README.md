@@ -25,6 +25,15 @@ with a lot of caution!
 Especially the buffer benchmark is at the time of writing for 90% I/O bound 
 in geopandas!
 
+GDAL vector algorithms are also benchmarked for buffer, intersection, union,
+and symmetric difference. They use GDAL's Python API (`osgeo.gdal.alg.vector`)
+and are included in the same read-operation-write timing. The vector-ops Conda
+environment installs GDAL 3.12 or newer for these algorithms.
+
+GDAL's vector dissolve algorithm does not match the cross-feature or grouped
+dissolve scenarios benchmarked here, so those operations are not included for
+GDAL.
+
 The test files used are not that large (eg. 500k polygons, 350 MB .gpkg), 
 but try to strike a balance between being large enough to give an idea on 
 processing time to expect versus the time spent waiting for a benchmark to be 

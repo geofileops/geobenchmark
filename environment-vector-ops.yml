@@ -5,6 +5,7 @@ dependencies:
   - python=3.14
   # required
   - dask-geopandas
+  - gdal >=3.12
   - geofileops
   - geopandas-base
   - matplotlib-base

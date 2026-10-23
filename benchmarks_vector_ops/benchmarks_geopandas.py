@@ -225,6 +225,8 @@ def _symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
         - the area for each (multipolygon) is a lot larger than the standard polygons,
           so each complex polygon interacts with many standard polygons
 
+    Test is disabled by default as it runs 32 hours.
+
     Changelog:
 
         - 2025-01-23: make complex polygons a lot more complex to be able to see the
