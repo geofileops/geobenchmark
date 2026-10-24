@@ -1,4 +1,4 @@
-"""Module to benchmark GDAL vector algorithms."""
+"""Module to benchmark GDAL CLI vector algorithms."""
 
 from datetime import datetime
 import logging
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 gdal.UseExceptions()
 
-_package = "gdal"
+_package = "gdal_cli"
 _package_version = gdal.VersionInfo("RELEASE_NAME")
 
 
