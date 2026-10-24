@@ -3,7 +3,14 @@ exclude = ["local_ignore"]
 ignore = ["*"]
 
 [[tool.mypy.overrides]]
-module = ["geopandas.*", "matplotlib.*", "pyogrio.*" , "setuptools.*", "shapely.*"]
+module = [
+    "geopandas.*",
+    "matplotlib.*",
+    "osgeo.*",
+    "pyogrio.*",
+    "setuptools.*",
+    "shapely.*",
+]
 ignore_missing_imports = true
 
 [tool.ruff]
