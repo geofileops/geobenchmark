@@ -21,7 +21,7 @@ The benchmarks included always follow the following usage scenario:
 
 So, if you are looking for a library for another use case (eg. process many 
 small files, do pure in-memory processing,...), use these benchmark results 
-with a lot of caution! 
+with a lot of caution!
 Especially the buffer benchmark is at the time of writing for 90% I/O bound 
 in geopandas!
 

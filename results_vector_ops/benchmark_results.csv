@@ -89,3 +89,6 @@ run_datetime,package,package_version,operation,operation_descr,secs_taken,run_de
 2026-10-17 16:24:12.707781,geofileops,0.12.0,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),21.343433,{'nb_cpu': 12}
 2026-10-17 16:24:44.317233,geofileops,0.12.0,symdif_complexpolys_agri,symdif_complexpolys_agri between agri parcels (515k polys) and 3 multipolys of 4 * 30k coords,31.539561,{'nb_cpu': 12}
 2026-10-17 16:25:57.273540,geofileops,0.12.0,union,union of 2 agri parcel layers BEFL (2*~500k polygons),72.902229,{'nb_cpu': 12}
+2026-10-24 01:56:02.518305,gdal_cli,3.13.3,buffer,buffer agri parcels BEFL (~500k polygons),30.842777,
+2026-10-24 02:07:48.196003,gdal_cli,3.13.3,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),705.592635,
+2026-10-24 02:35:14.232932,gdal_cli,3.13.3,union,union of 2 agri parcel layers BEFL (2*~500k polygons),1645.964913,
