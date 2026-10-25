@@ -8,12 +8,13 @@ def main():
         benchmarker.run_benchmarks(
             benchmarks_subdir="benchmarks_vector_ops",
             results_subdir="results_vector_ops",
-            # modules=["benchmarks_geofileops"],
-            modules=["benchmarks_gdal_cli"],
+            modules=["benchmarks_geofileops"],
+            # modules=[("benchmarks_duckdb", {"file_format": "geoparquet"})],
+            # modules=[("benchmarks_duckdb", {"file_format": "gpkg"})],
             # modules=["benchmarks_geopandas"],
             # modules=["benchmarks_dask_geopandas"],
             # functions=["buffer"],
-            # functions=["symdif_complexpolys_agri"],
+            # functions=["_symdif_complexpolys_agri"],
         )
         return
 
