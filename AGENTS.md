@@ -21,3 +21,7 @@
 - Run the configured pre-commit checks when practical. They include Ruff
   formatting, Ruff linting, and mypy; CI runs pre-commit as well. See
   [.pre-commit-config.yaml](.pre-commit-config.yaml).
+- Before running tests or pre-commit, activate the environment for the suite
+  being checked. Activation may set variables required by native dependencies
+  such as GDAL, so avoid invoking the environment's Python directly when those
+  variables are needed.

@@ -1,6 +1,4 @@
-"""
-Module to generate reports for benchmarks.
-"""
+"""Module to generate reports for benchmarks."""
 
 import ast
 import math
@@ -22,12 +20,15 @@ A4_SHORT_SIDE = 8.27
 def generate_reports(results_path: Path, output_dir: Path):
     benchmark_df = pd.read_csv(results_path)
 
-    def format_run_details(input: dict) -> str:
-        if input is None or input == np.nan:
+    def format_run_details(run_details: object) -> str:
+        if run_details is None or run_details == np.nan:
             return ""
-        if isinstance(input, str):
-            input = ast.literal_eval(input)
-            result_list = [f"{key}:{input[key]}" for key in input]
+        if isinstance(run_details, str):
+            run_details = ast.literal_eval(run_details)
+        if isinstance(run_details, dict):
+            result_list = [
+                f"{key}:{value}" for key, value in run_details.items() if key != "io"
+            ]
             return ";".join(result_list)
 
         return ""
@@ -51,7 +52,7 @@ def generate_reports(results_path: Path, output_dir: Path):
             ]
             package_operation_df["run_details"] = package_operation_df[
                 "run_details"
-            ].apply(lambda x: format_run_details(x))
+            ].apply(format_run_details)
             package_operation_df = package_operation_df.set_index(
                 ["package_version", "run_details"]
             )
@@ -113,6 +114,7 @@ def generate_reports(results_path: Path, output_dir: Path):
         output_path=results_report_path,
         yscale="log",
         print_labels_on_points=True,
+        point_labels_to_right=True,
         y_value_formatter="{0:.0f}",
         size=(8, 6),
         linestyle="None",
@@ -127,6 +129,7 @@ def save_chart(
     yscale: Optional[Literal["linear", "log", "symlog", "logit"]] = None,
     y_value_formatter: Optional[str] = None,
     print_labels_on_points: bool = False,
+    point_labels_to_right: bool = False,
     size: Tuple[float, float] = (8, 4),
     plot_kind: Literal[
         "line",
@@ -158,6 +161,8 @@ def save_chart(
               - {0:.2f} for a float with two decimals.
             Defaults to None.
         print_labels_on_points (bool, optional): _description_. Defaults to False.
+        point_labels_to_right (bool, optional): place point labels to the right.
+            Defaults to False.
         size (Tuple[float, float], optional): _description_. Defaults to (8, 4).
         plot_kind (str, optional): _description_. Defaults to "line".
         gridlines (str, optional): where to draw grid lines:
@@ -196,6 +201,9 @@ def save_chart(
 
     # Plot
     df.plot(ax=axs, kind=plot_kind, rot=rot, title=title, linestyle=linestyle)
+    if point_labels_to_right:
+        x_left, x_right = axs.get_xlim()
+        axs.set_xlim(right=x_right + (x_right - x_left) * 0.1)
 
     # Show y axes as percentages is asked
     if y_value_formatter is not None:
@@ -208,13 +216,13 @@ def save_chart(
 
     # Set different markers + print labels
     # Set different markers for each line + get mn/max values + print labels
-    markers = ("+", ".", "o", "*")
+    markers = ("o", "^", "*", "+", "x", ".", "s", "D", "v", "P", "X", "d")
     max_y_value = None
     min_y_value = None
     for i, line in enumerate(axs.get_lines()):
         line.set_marker(markers[i % len(markers)])
-
         label_above_line = True
+
         for index, row in enumerate(df.itertuples()):
             for row_fieldname, row_fieldvalue in row._asdict().items():
                 if row_fieldname != "Index":
@@ -229,13 +237,17 @@ def save_chart(
                         else:
                             text = str(row_fieldvalue)
 
-                        # Label below or above line? + switch
-                        if label_above_line is True:
-                            xytext = (0, 5)
-                            label_above_line = False
+                        if point_labels_to_right:
+                            xytext = (5, 0)
+                            horizontalalignment = "left"
                         else:
-                            xytext = (0, -15)
-                            label_above_line = True
+                            if label_above_line is True:
+                                xytext = (0, 5)
+                                label_above_line = False
+                            else:
+                                xytext = (0, -15)
+                                label_above_line = True
+                            horizontalalignment = "center"
 
                         axs.annotate(
                             text=text,
@@ -244,7 +256,7 @@ def save_chart(
                             xy=(index, row_fieldvalue),
                             xytext=xytext,
                             textcoords="offset points",
-                            ha="center",
+                            ha=horizontalalignment,
                         )
 
     # Set bottom and top values for y axis
