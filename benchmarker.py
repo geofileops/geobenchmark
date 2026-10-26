@@ -1,20 +1,21 @@
-"""
-Module for benchmarking.
-"""
+"""Module for benchmarking."""
 
 import datetime
+from contextlib import nullcontext
 import importlib
 import inspect
 import logging
 from pathlib import Path
 import tempfile
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import pandas as pd
 
 import reporter
 
 logger = logging.getLogger(__name__)
+
+ModuleSpec = Union[str, Tuple[str, Dict[str, Any]]]
 
 
 class RunResult:
@@ -53,11 +54,59 @@ class RunResult:
         return f"{self.__class__}({self.__dict__})"
 
 
+def _should_run_benchmark_function(
+    function_name: str, functions: Optional[List[str]]
+) -> bool:
+    if functions is None:
+        return not function_name.startswith("_")
+    return function_name in functions
+
+
+def _normalize_module_specs(
+    modules: Optional[List[ModuleSpec]],
+) -> tuple[set[str], Dict[str, List[Dict[str, Any]]]]:
+    if modules is None:
+        return set(), {}
+
+    default_modules = set()
+    explicit_configurations: Dict[str, List[Dict[str, Any]]] = {}
+    for module_spec in modules:
+        if isinstance(module_spec, str):
+            if module_spec in explicit_configurations:
+                raise ValueError(
+                    f"Module {module_spec!r} cannot have both default and "
+                    "explicit configurations in modules"
+                )
+            default_modules.add(module_spec)
+            continue
+
+        if (
+            not isinstance(module_spec, tuple)
+            or len(module_spec) != 2
+            or not isinstance(module_spec[0], str)
+            or not isinstance(module_spec[1], dict)
+        ):
+            raise TypeError(
+                "Each module must be a name string or a "
+                "(module_name, configuration_dict) tuple"
+            )
+
+        module_name, configuration = module_spec
+        if module_name in default_modules:
+            raise ValueError(
+                f"Module {module_name!r} cannot have both default and explicit "
+                "configurations in modules"
+            )
+        explicit_configurations.setdefault(module_name, []).append(configuration)
+
+    return default_modules, explicit_configurations
+
+
 def run_benchmarks(
     benchmarks_subdir: str = "benchmarks",
     results_subdir: str = "results",
     results_filename: str = "benchmark_results.csv",
-    modules: Optional[List[str]] = None,
+    modules: Optional[List[ModuleSpec]] = None,
     functions: Optional[List[str]] = None,
 ):
     # Init logging
@@ -73,11 +122,16 @@ def run_benchmarks(
     tmp_dir.mkdir(parents=True, exist_ok=True)
 
     benchmarks_dir = Path(__file__).parent / benchmarks_subdir
+    default_modules, explicit_configurations = _normalize_module_specs(modules)
     results = []
     for file in benchmarks_dir.glob("benchmarks_*.py"):
         module_name = file.stem
         if (not module_name.startswith("_")) and (module_name not in globals()):
-            if modules is not None and module_name not in modules:
+            if (
+                modules is not None
+                and module_name not in default_modules
+                and module_name not in explicit_configurations
+            ):
                 # Benchmark whitelist specified, and this one isn't in it
                 logger.info(f"skip module {module_name}: not in modules: {modules}")
                 continue
@@ -85,39 +139,103 @@ def run_benchmarks(
             benchmark_implementation = importlib.import_module(
                 f"{benchmarks_subdir}.{module_name}", __package__
             )
+            module_configuration_hook = getattr(
+                benchmark_implementation, "_benchmark_configuration", None
+            )
+            available_functions = [
+                (function_name, function)
+                for function_name, function in inspect.getmembers(
+                    benchmark_implementation, inspect.isfunction
+                )
+                if function.__module__ == benchmark_implementation.__name__
+                and function is not module_configuration_hook
+            ]
+
+            module_configurations: Sequence[Optional[Dict[str, Any]]]
+            if module_name in explicit_configurations:
+                module_configurations = explicit_configurations[module_name]
+            elif modules is None or module_name in default_modules:
+                module_defaults = getattr(
+                    benchmark_implementation, "DEFAULT_BENCHMARK_CONFIGS", None
+                )
+                if module_defaults is None:
+                    module_configurations = [None]
+                elif not isinstance(module_defaults, (list, tuple)):
+                    raise TypeError(
+                        f"{module_name}.DEFAULT_BENCHMARK_CONFIGS must be a list "
+                        "or tuple of configuration dictionaries"
+                    )
+                elif not module_defaults:
+                    raise ValueError(
+                        f"{module_name}.DEFAULT_BENCHMARK_CONFIGS cannot be empty"
+                    )
+                elif any(
+                    not isinstance(configuration, dict)
+                    for configuration in module_defaults
+                ):
+                    raise TypeError(
+                        f"{module_name}.DEFAULT_BENCHMARK_CONFIGS must contain "
+                        "only configuration dictionaries"
+                    )
+                else:
+                    module_configurations = module_defaults
+            else:
+                module_configurations = [None]
+
+            if any(
+                configuration is not None for configuration in module_configurations
+            ):
+                if not module_configurations:
+                    raise ValueError(
+                        f"Configurations for {module_name!r} cannot be empty"
+                    )
+                if not callable(module_configuration_hook):
+                    raise ValueError(
+                        f"Module {module_name!r} has configurations but "
+                        "does not define _benchmark_configuration"
+                    )
 
             # Run the functions in this benchmark
-            available_functions = inspect.getmembers(
-                benchmark_implementation, inspect.isfunction
-            )
-            for function_name, function in available_functions:
-                if function_name.startswith("_"):
-                    continue
-                if functions is not None and function_name not in functions:
-                    # Function whitelist specified, and this one isn't in it
-                    logger.info(
-                        f"skip function {function_name}: not in functions: {functions}"
+            for module_configuration in module_configurations:
+                if module_configuration is None:
+                    configuration_context = nullcontext()
+                else:
+                    assert callable(module_configuration_hook)
+                    configuration_context = module_configuration_hook(
+                        **module_configuration
                     )
-                    continue
+                with configuration_context:
+                    for function_name, function in available_functions:
+                        if not _should_run_benchmark_function(function_name, functions):
+                            # Function whitelist specified, and this one isn't in it
+                            logger.info(
+                                f"skip function {function_name}: not in functions: "
+                                f"{functions}"
+                            )
+                            continue
 
-                # Run the benchmark function
-                logger.info(f"{benchmarks_subdir}.{module_name}.{function_name} start")
-                function_results = function(tmp_dir=tmp_dir)
-                if isinstance(function_results, List) is False:
-                    function_results = [function_results]
-                for function_result in function_results:
-                    if isinstance(function_result, RunResult) is True:
+                        # Run the benchmark function
                         logger.info(
-                            f"{benchmarks_subdir}.{module_name}.{function_name} "
-                            f"ready in {function_result.secs_taken:.2f} s"
+                            f"{benchmarks_subdir}.{module_name}.{function_name} start"
                         )
-                        results.append(function_result)
-                    else:
-                        logger.warning(
-                            f"{benchmarks_subdir}.{module_name}.{function_name} "
-                            "ignored: instead of a RunResult it returned "
-                            f"{function_result}"
-                        )
+                        function_results = function(tmp_dir=tmp_dir)
+                        if isinstance(function_results, List) is False:
+                            function_results = [function_results]
+                        for function_result in function_results:
+                            if isinstance(function_result, RunResult) is True:
+                                logger.info(
+                                    f"{benchmarks_subdir}.{module_name}."
+                                    f"{function_name} ready in "
+                                    f"{function_result.secs_taken:.2f} s"
+                                )
+                                results.append(function_result)
+                            else:
+                                logger.warning(
+                                    f"{benchmarks_subdir}.{module_name}."
+                                    f"{function_name} ignored: instead of a "
+                                    "RunResult it returned "
+                                    f"{function_result}"
+                                )
 
     # Add results to csv file
     if len(results) > 0:

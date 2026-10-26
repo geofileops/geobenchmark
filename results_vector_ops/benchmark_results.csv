@@ -92,3 +92,13 @@ run_datetime,package,package_version,operation,operation_descr,secs_taken,run_de
 2026-10-24 01:56:02.518305,gdal_cli,3.13.3,buffer,buffer agri parcels BEFL (~500k polygons),30.842777,
 2026-10-24 02:07:48.196003,gdal_cli,3.13.3,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),705.592635,
 2026-10-24 02:35:14.232932,gdal_cli,3.13.3,union,union of 2 agri parcel layers BEFL (2*~500k polygons),1645.964913,
+2026-10-25 18:24:24.662917,duckdb-geoparquet,1.5.6,buffer,"buffer agri parcels BEFL (~500k polygons), distance=1",5.849275,"{'nb_cpu': 12, 'file_format': 'geoparquet', 'io': 'read_parquet, COPY to GeoParquet'}"
+2026-10-25 18:48:01.647676,duckdb-geoparquet,1.5.6,dissolve,dissolve agri parcels BEFL (~500k polygons),1416.716984,"{'nb_cpu': 12, 'file_format': 'geoparquet', 'io': 'read_parquet, COPY to GeoParquet'}"
+2026-10-25 18:57:20.417858,duckdb-geoparquet,1.5.6,dissolve_groupby,"dissolve agri parcels BEFL (~500k polygons), groupby=GWSGRPH_LB",558.549147,"{'nb_cpu': 12, 'file_format': 'geoparquet', 'io': 'read_parquet, COPY to GeoParquet'}"
+2026-10-25 18:58:39.333311,duckdb-geoparquet,1.5.6,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),78.673312,"{'nb_cpu': 12, 'file_format': 'geoparquet', 'io': 'read_parquet, COPY to GeoParquet'}"
+2026-10-25 19:07:31.928226,duckdb-geoparquet,1.5.6,union,union of 2 agri parcel layers BEFL (2*~500k polygons),532.350752,"{'nb_cpu': 12, 'file_format': 'geoparquet', 'io': 'read_parquet, COPY to GeoParquet'}"
+2026-10-25 19:07:53.996991,duckdb-gpkg,1.5.6,buffer,"buffer agri parcels BEFL (~500k polygons), distance=1",21.776876,"{'nb_cpu': 12, 'file_format': 'gpkg', 'io': 'ST_Read (single-threaded), GDAL COPY to GPKG'}"
+2026-10-25 19:31:36.355654,duckdb-gpkg,1.5.6,dissolve,dissolve agri parcels BEFL (~500k polygons),1422.143967,"{'nb_cpu': 12, 'file_format': 'gpkg', 'io': 'ST_Read (single-threaded), GDAL COPY to GPKG'}"
+2026-10-25 19:40:46.961916,duckdb-gpkg,1.5.6,dissolve_groupby,"dissolve agri parcels BEFL (~500k polygons), groupby=GWSGRPH_LB",550.436566,"{'nb_cpu': 12, 'file_format': 'gpkg', 'io': 'ST_Read (single-threaded), GDAL COPY to GPKG'}"
+2026-10-25 19:45:25.815912,duckdb-gpkg,1.5.6,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),278.692108,"{'nb_cpu': 12, 'file_format': 'gpkg', 'io': 'ST_Read (single-threaded), GDAL COPY to GPKG'}"
+2026-10-25 19:54:26.694393,duckdb-gpkg,1.5.6,union,union of 2 agri parcel layers BEFL (2*~500k polygons),540.704111,"{'nb_cpu': 12, 'file_format': 'gpkg', 'io': 'ST_Read (single-threaded), GDAL COPY to GPKG'}"

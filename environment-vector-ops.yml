@@ -5,6 +5,7 @@ dependencies:
   - python=3.14
   # required
   - dask-geopandas
+  - duckdb
   - gdal >=3.12
   - geofileops
   - geopandas-base
@@ -13,5 +14,6 @@ dependencies:
   - mypy =1.18.2
   - pandas-stubs
   - pre-commit
+  - pytest
   - ruff =0.14.4
   
