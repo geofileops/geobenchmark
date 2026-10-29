@@ -1,20 +1,17 @@
-"""
-Module to benchmark geopandas operations.
-"""
+"""Benchmark vector operations using Dask-GeoPandas."""
 
-from datetime import datetime
 import logging
 import multiprocessing
+from datetime import datetime
 from pathlib import Path
 
 import dask_geopandas as dgpd
-
 import geofileops as gfo
-from geofileops.util import _geoseries_util
 import pyogrio
+from geofileops.util import _geoseries_util
 
-from benchmarker import RunResult
 import testdata
+from benchmarker import RunResult
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +28,7 @@ if nb_cores < _nb_parallel:
 
 
 def buffer(tmp_dir: Path) -> RunResult:
+    """Benchmark buffering the agricultural parcels with Dask-GeoPandas."""
     # Init
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
@@ -86,11 +84,10 @@ def buffer(tmp_dir: Path) -> RunResult:
 
 
 def _clip(tmp_dir: Path) -> RunResult:
-    """
-    On the current test datasets, clip with dask-geopandas crashes with memory issues,
-    so no use to activate benchmark.
-    """
+    """Skip clipping because current datasets exceed Dask-GeoPandas memory limits.
 
+    A less complex clip layer may make this benchmark feasible.
+    """
     # Clip operation always crashes with memory issues in dask-geopandas
     # TODO: try using a less complex clip layer
 
@@ -149,6 +146,7 @@ def _clip(tmp_dir: Path) -> RunResult:
 
 
 def dissolve(tmp_dir: Path) -> RunResult:
+    """Benchmark dissolving the agricultural parcels with Dask-GeoPandas."""
     # Init
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
@@ -194,6 +192,7 @@ def dissolve(tmp_dir: Path) -> RunResult:
 
 
 def dissolve_groupby(tmp_dir: Path) -> RunResult:
+    """Benchmark grouped dissolve of the agricultural parcels with Dask-GeoPandas."""
     # Init
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 

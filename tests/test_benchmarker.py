@@ -17,12 +17,12 @@ def _run_fake_module(
     **kwargs,
 ) -> None:
     monkeypatch.setattr(
-        Path, "glob", lambda self, pattern: [Path("benchmarks_fake.py")]
+        Path, "glob", lambda _self, _pattern: [Path("benchmarks_fake.py")]
     )
     monkeypatch.setattr(
         benchmarker.importlib,
         "import_module",
-        lambda *args, **kwargs: module,
+        lambda *_args, **_kwargs: module,
     )
     benchmarker.run_benchmarks(
         benchmarks_subdir="fake_benchmarks",
@@ -58,16 +58,16 @@ def test_run_benchmarks_without_module_defaults_keeps_tmp_dir_call(
     calls = []
 
     @contextmanager
-    def _benchmark_configuration(**config):
+    def _benchmark_configuration(**_config):
         raise AssertionError("configuration hook should not run")
         yield
 
     def buffer(tmp_dir: Path) -> None:
         calls.append(tmp_dir)
 
-    setattr(module, "_benchmark_configuration", _benchmark_configuration)
+    setattr(module, "_benchmark_configuration", _benchmark_configuration)  # noqa: B010
     _add_benchmark_function(module, buffer)
-    setattr(module, "contextmanager", contextmanager)
+    setattr(module, "contextmanager", contextmanager)  # noqa: B010
 
     _run_fake_module(monkeypatch, tmp_path, module)
 
@@ -90,20 +90,17 @@ def test_run_benchmarks_repeats_module_defaults_and_filters_functions(
         finally:
             active_configuration.pop()
 
-    def buffer(tmp_dir: Path) -> None:
+    def buffer(tmp_dir: Path) -> None:  # noqa: ARG001
         calls.append(("buffer", active_configuration[-1]))
 
-    def dissolve(tmp_dir: Path) -> None:
+    def dissolve(tmp_dir: Path) -> None:  # noqa: ARG001
         calls.append(("dissolve", active_configuration[-1]))
 
-    setattr(module, "_benchmark_configuration", _benchmark_configuration)
-    setattr(
+    setattr(module, "_benchmark_configuration", _benchmark_configuration)  # noqa: B010
+    setattr(  # noqa: B010
         module,
         "DEFAULT_BENCHMARK_CONFIGS",
-        [
-            {"file_format": "gpkg"},
-            {"file_format": "geoparquet"},
-        ],
+        [{"file_format": "gpkg"}, {"file_format": "geoparquet"}],
     )
     _add_benchmark_function(module, buffer)
     _add_benchmark_function(module, dissolve)
@@ -134,11 +131,11 @@ def test_run_benchmarks_all_modules_uses_module_defaults(
         finally:
             active_configuration.pop()
 
-    def buffer(tmp_dir: Path) -> None:
+    def buffer(tmp_dir: Path) -> None:  # noqa: ARG001
         calls.append(active_configuration[-1])
 
-    setattr(module, "_benchmark_configuration", _benchmark_configuration)
-    setattr(
+    setattr(module, "_benchmark_configuration", _benchmark_configuration)  # noqa: B010
+    setattr(  # noqa: B010
         module,
         "DEFAULT_BENCHMARK_CONFIGS",
         [{"file_format": "gpkg"}, {"file_format": "geoparquet"}],
@@ -166,11 +163,11 @@ def test_tuple_module_specs_override_module_defaults(
         finally:
             active_configuration.pop()
 
-    def buffer(tmp_dir: Path) -> None:
+    def buffer(tmp_dir: Path) -> None:  # noqa: ARG001
         calls.append(active_configuration[-1])
 
-    setattr(module, "_benchmark_configuration", _benchmark_configuration)
-    setattr(module, "DEFAULT_BENCHMARK_CONFIGS", [{"file_format": "gpkg"}])
+    setattr(module, "_benchmark_configuration", _benchmark_configuration)  # noqa: B010
+    setattr(module, "DEFAULT_BENCHMARK_CONFIGS", [{"file_format": "gpkg"}])  # noqa: B010
     _add_benchmark_function(module, buffer)
 
     _run_fake_module(
@@ -201,10 +198,10 @@ def test_run_benchmarks_restores_module_configuration_on_error(
         finally:
             active_configuration.pop()
 
-    def buffer(tmp_dir: Path) -> None:
+    def buffer(tmp_dir: Path) -> None:  # noqa: ARG001
         raise RuntimeError("benchmark failed")
 
-    setattr(module, "_benchmark_configuration", _benchmark_configuration)
+    setattr(module, "_benchmark_configuration", _benchmark_configuration)  # noqa: B010
     _add_benchmark_function(module, buffer)
 
     with pytest.raises(RuntimeError, match="benchmark failed"):

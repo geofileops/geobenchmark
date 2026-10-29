@@ -10,6 +10,6 @@ dependencies:
   - matplotlib-base
   - qgis
   # linting
-  - mypy =1.18.2
+  - mypy =2.4.0
   - pre-commit
-  - ruff =0.14.4
+  - ruff =0.16.10

@@ -1,7 +1,10 @@
+"""Entry point for running all I/O benchmarks."""
+
 import benchmarker
 
 
-def main():
+def main() -> None:
+    """Run all I/O benchmarks."""
     all_benchmarks = True
     if not all_benchmarks:
         # Only run specific benchmark function(s)

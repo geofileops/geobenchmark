@@ -1,20 +1,17 @@
-"""
-Module to benchmark zonalstats.
-"""
+"""Benchmark zonal statistics using pyjeo."""
 
+import logging
 import os
 from datetime import datetime
-import logging
 from pathlib import Path
-from typing import List
 
-import pandas as pd
 import geopandas as gpd
+import pandas as pd
 import pyjeo as pj
 
+import testdata
 from benchmarker import RunResult
 from benchmarks_zonalstats import _common
-import testdata
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +28,8 @@ def _get_version() -> str:
         return f"{pj.__version__}".replace("v", "")
 
 
-def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
+def zonalstats_1band(tmp_dir: Path) -> list[RunResult]:
+    """Benchmark pyjeo statistics for one raster band."""
     # Init
     results = []
     vector_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)

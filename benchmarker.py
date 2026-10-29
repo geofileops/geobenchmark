@@ -1,37 +1,39 @@
 """Module for benchmarking."""
 
 import datetime
-from contextlib import nullcontext
 import importlib
 import inspect
 import logging
-from pathlib import Path
 import tempfile
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from contextlib import nullcontext
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
 import reporter
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 logger = logging.getLogger(__name__)
 
-ModuleSpec = Union[str, Tuple[str, Dict[str, Any]]]
+ModuleSpec = str | tuple[str, dict[str, Any]]
 
 
 class RunResult:
     """The result of a benchmark run."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         package: str,
         package_version: str,
         operation: str,
         operation_descr: str,
         secs_taken: float,
-        run_details: Optional[dict] = None,
-    ):
-        """
-        Constructor for a RunResult.
+        run_details: dict | None = None,
+    ) -> None:
+        """Constructor for a RunResult.
 
         Args:
             package (str): Package being benchmarked.
@@ -50,12 +52,13 @@ class RunResult:
         self.secs_taken = secs_taken
         self.run_details = run_details
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return a representation of the benchmark result."""
         return f"{self.__class__}({self.__dict__})"
 
 
 def _should_run_benchmark_function(
-    function_name: str, functions: Optional[List[str]]
+    function_name: str, functions: list[str] | None
 ) -> bool:
     if functions is None:
         return not function_name.startswith("_")
@@ -63,13 +66,13 @@ def _should_run_benchmark_function(
 
 
 def _normalize_module_specs(
-    modules: Optional[List[ModuleSpec]],
-) -> tuple[set[str], Dict[str, List[Dict[str, Any]]]]:
+    modules: list[ModuleSpec] | None,
+) -> tuple[set[str], dict[str, list[dict[str, Any]]]]:
     if modules is None:
         return set(), {}
 
     default_modules = set()
-    explicit_configurations: Dict[str, List[Dict[str, Any]]] = {}
+    explicit_configurations: dict[str, list[dict[str, Any]]] = {}
     for module_spec in modules:
         if isinstance(module_spec, str):
             if module_spec in explicit_configurations:
@@ -106,9 +109,10 @@ def run_benchmarks(
     benchmarks_subdir: str = "benchmarks",
     results_subdir: str = "results",
     results_filename: str = "benchmark_results.csv",
-    modules: Optional[List[ModuleSpec]] = None,
-    functions: Optional[List[str]] = None,
-):
+    modules: list[ModuleSpec] | None = None,
+    functions: list[str] | None = None,
+) -> None:
+    """Run selected benchmarks and append their results to the report."""
     # Init logging
     logging.basicConfig(
         format="%(asctime)s.%(msecs)03d|%(levelname)s|%(name)s|%(message)s",
@@ -151,7 +155,7 @@ def run_benchmarks(
                 and function is not module_configuration_hook
             ]
 
-            module_configurations: Sequence[Optional[Dict[str, Any]]]
+            module_configurations: Sequence[dict[str, Any] | None]
             if module_name in explicit_configurations:
                 module_configurations = explicit_configurations[module_name]
             elif modules is None or module_name in default_modules:
@@ -219,7 +223,7 @@ def run_benchmarks(
                             f"{benchmarks_subdir}.{module_name}.{function_name} start"
                         )
                         function_results = function(tmp_dir=tmp_dir)
-                        if isinstance(function_results, List) is False:
+                        if isinstance(function_results, list) is False:
                             function_results = [function_results]
                         for function_result in function_results:
                             if isinstance(function_result, RunResult) is True:

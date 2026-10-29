@@ -1,18 +1,15 @@
-"""
-Module to benchmark zonalstats.
-"""
+"""Benchmark zonal statistics using GeoWombat."""
 
-from datetime import datetime
 import logging
+from datetime import datetime
 from pathlib import Path
-from typing import List
 
 import geopandas as gpd
 import geowombat as gw
 
+import testdata
 from benchmarker import RunResult
 from benchmarks_zonalstats import _common
-import testdata
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +22,8 @@ def _get_version() -> str:
     return f"{gw.__version__}".replace("v", "")
 
 
-def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
+def zonalstats_1band(tmp_dir: Path) -> list[RunResult]:
+    """Benchmark GeoWombat statistics for one raster band."""
     # Init
     results = []
     vector_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)

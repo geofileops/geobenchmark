@@ -1,19 +1,17 @@
-"""
-Module to benchmark geopandas operations.
-"""
+"""Benchmark vector operations using GeoPandas."""
 
-from datetime import datetime
 import inspect
 import logging
+from datetime import datetime
 from pathlib import Path
 
-from geofileops.util import _geoseries_util as geoseries_util
 import geofileops as gfo
 import geopandas as gpd
 import shapely
+from geofileops.util import _geoseries_util as geoseries_util
 
-from benchmarker import RunResult
 import testdata
+from benchmarker import RunResult
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +20,7 @@ _package_version = gpd.__version__
 
 
 def buffer(tmp_dir: Path) -> RunResult:
+    """Benchmark buffering the agricultural parcels with GeoPandas."""
     # Init
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
@@ -57,9 +56,9 @@ def buffer(tmp_dir: Path) -> RunResult:
 
 
 def _clip(tmp_dir: Path) -> RunResult:
-    """
-    On the current test datasets, clip with geopandas runs for days without result,
-    so no use to activate benchmark
+    """Skip clipping because it takes days on the current test datasets.
+
+    Use a smaller clip layer before enabling this benchmark.
     """
     # Init
     input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
@@ -100,6 +99,7 @@ def _clip(tmp_dir: Path) -> RunResult:
 
 
 def dissolve(tmp_dir: Path) -> RunResult:
+    """Benchmark dissolving the agricultural parcels with GeoPandas."""
     # Init
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
@@ -137,6 +137,7 @@ def dissolve(tmp_dir: Path) -> RunResult:
 
 
 def dissolve_groupby(tmp_dir: Path) -> RunResult:
+    """Benchmark grouped dissolve of the agricultural parcels with GeoPandas."""
     # Init
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
@@ -176,6 +177,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
 
 
 def intersection(tmp_dir: Path) -> RunResult:
+    """Benchmark intersection of the two agricultural parcel datasets."""
     # Init
     input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
@@ -285,6 +287,7 @@ def _symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
 
 
 def union(tmp_dir: Path) -> RunResult:
+    """Benchmark union of the two agricultural parcel datasets."""
     # Init
     input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)

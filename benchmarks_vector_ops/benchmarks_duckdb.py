@@ -18,12 +18,12 @@ Elapsed seconds:
 These are single-run measurements, not statistical averages.
 """
 
-from datetime import datetime
-from contextlib import contextmanager
 import logging
 import os
+from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
-from typing import Iterator, Optional
 
 import duckdb
 
@@ -65,7 +65,7 @@ DEFAULT_BENCHMARK_CONFIGS = (
 
 @contextmanager
 def _benchmark_configuration(file_format: str) -> Iterator[None]:
-    global _file_format
+    global _file_format  # noqa: PLW0603
 
     file_format = file_format.lower()
     _validate_file_format(file_format)
@@ -94,12 +94,12 @@ def _read_table(path: Path) -> str:
 
 
 def _test_file(tmp_dir: Path, name: str) -> tuple[Path, str]:
-    import testdata
+    import testdata  # noqa: PLC0415
 
     return testdata.TestFile[name].get_file(tmp_dir)
 
 
-def _connect(database_path: Optional[Path] = None) -> duckdb.DuckDBPyConnection:
+def _connect(database_path: Path | None = None) -> duckdb.DuckDBPyConnection:
     connection = (
         duckdb.connect(str(database_path)) if database_path else duckdb.connect()
     )
@@ -138,7 +138,7 @@ def _build_operation_query(
     connection: duckdb.DuckDBPyConnection,
     operation: str,
     input1_path: Path,
-    input2_path: Optional[Path] = None,
+    input2_path: Path | None = None,
 ) -> str:
     input1 = f"a AS (SELECT * FROM {_read_table(input1_path)})"
     if operation == "buffer":
@@ -375,7 +375,7 @@ def _copy_query_to_geoparquet(
 
 def _prepare_inputs(
     tmp_dir: Path, input_paths: list[Path]
-) -> tuple[Optional[Path], list[Path]]:
+) -> tuple[Path | None, list[Path]]:
     if _file_format == "gpkg":
         return None, input_paths
 
@@ -383,7 +383,9 @@ def _prepare_inputs(
         connection = _connect()
         try:
             parquet_paths = [tmp_dir / f"{path.stem}.parquet" for path in input_paths]
-            for input_path, parquet_path in zip(input_paths, parquet_paths):
+            for input_path, parquet_path in zip(
+                input_paths, parquet_paths, strict=True
+            ):
                 if not parquet_path.exists():
                     query = (
                         f"SELECT * FROM ST_Read({_sql_literal(input_path.as_posix())})"
@@ -443,13 +445,13 @@ def _write_query_result(
         connection.execute(create_table_query)
 
 
-def _run_benchmark(
+def _run_benchmark(  # noqa: PLR0917
     operation: str,
     operation_descr: str,
     input1_path: Path,
     tmp_dir: Path,
-    input2_path: Optional[Path] = None,
-    result_operation: Optional[str] = None,
+    input2_path: Path | None = None,
+    result_operation: str | None = None,
 ) -> RunResult:
     result_operation = result_operation or operation
     input_paths = [input1_path]
@@ -499,6 +501,7 @@ def _run_benchmark(
 
 
 def buffer(tmp_dir: Path) -> RunResult:
+    """Benchmark DuckDB's buffer operation for the configured file format."""
     input_path, _ = _test_file(tmp_dir, "AGRIPRC_2018")
     return _run_benchmark(
         "buffer",
@@ -509,6 +512,7 @@ def buffer(tmp_dir: Path) -> RunResult:
 
 
 def dissolve(tmp_dir: Path) -> RunResult:
+    """Benchmark DuckDB's dissolve operation for the configured file format."""
     input_path, _ = _test_file(tmp_dir, "AGRIPRC_2018")
     return _run_benchmark(
         "dissolve",
@@ -519,6 +523,7 @@ def dissolve(tmp_dir: Path) -> RunResult:
 
 
 def dissolve_groupby(tmp_dir: Path) -> RunResult:
+    """Benchmark DuckDB's grouped dissolve for the configured file format."""
     input_path, _ = _test_file(tmp_dir, "AGRIPRC_2018")
     return _run_benchmark(
         "dissolve_groupby",
@@ -529,6 +534,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
 
 
 def intersection(tmp_dir: Path) -> RunResult:
+    """Benchmark DuckDB's intersection operation for the configured file format."""
     input1_path, _ = _test_file(tmp_dir, "AGRIPRC_2018")
     input2_path, _ = _test_file(tmp_dir, "AGRIPRC_2019")
     return _run_benchmark(
@@ -541,6 +547,7 @@ def intersection(tmp_dir: Path) -> RunResult:
 
 
 def union(tmp_dir: Path) -> RunResult:
+    """Benchmark DuckDB's union operation for the configured file format."""
     input1_path, _ = _test_file(tmp_dir, "AGRIPRC_2018")
     input2_path, _ = _test_file(tmp_dir, "AGRIPRC_2019")
     return _run_benchmark(
@@ -565,9 +572,10 @@ def _join_by_location_intersects(tmp_dir: Path) -> RunResult:
 
 
 def _symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
-    import geofileops as gfo
-    import shapely
-    import testdata
+    import geofileops as gfo  # noqa: PLC0415
+    import shapely  # noqa: PLC0415
+
+    import testdata  # noqa: PLC0415
 
     input1_path, input1_descr = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     info = gfo.get_layerinfo(input1_path)
