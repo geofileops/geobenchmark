@@ -36,6 +36,14 @@ the speed improvements become (even) more important.
 The benchmarks ran on a Windows workstation and the libraries were constrained
 to use a maximum of 12 logical cores.
 
+Benchmark results also record a system-wide estimate of memory use in bytes:
+available memory at the start, the minimum available memory observed, and the
+nonnegative drop between them. The runner samples every 100 ms. This captures
+the combined system impact of multiprocessing workers without summing process
+RSS, which can count shared memory more than once. It is an estimate, not an
+exact per-benchmark peak; short spikes may be missed, and other system activity
+can distort it. Avoid running other memory-intensive tasks during benchmarks.
+
 The following chart shows the main results of this benchmark.
 
 ![Geo benchmark](results_vector_ops/GeoBenchmark.png)

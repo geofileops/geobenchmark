@@ -1,5 +1,6 @@
 """Module for benchmarking."""
 
+import csv
 import datetime
 import importlib
 import inspect
@@ -7,9 +8,11 @@ import logging
 import tempfile
 from contextlib import nullcontext
 from pathlib import Path
+from threading import Event, Thread
+from types import TracebackType
 from typing import TYPE_CHECKING, Any
 
-import pandas as pd
+import psutil
 
 import reporter
 
@@ -19,6 +22,55 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 ModuleSpec = str | tuple[str, dict[str, Any]]
+_MEMORY_SAMPLE_INTERVAL_SECONDS = 0.1
+
+
+class _AvailableMemorySampler:
+    """Sample system-available memory while a benchmark function runs."""
+
+    def __init__(
+        self, interval_seconds: float = _MEMORY_SAMPLE_INTERVAL_SECONDS
+    ) -> None:
+        self._interval_seconds = interval_seconds
+        self._stop_event = Event()
+        self._samples: list[tuple[datetime.datetime, int]] = []
+        self._thread: Thread | None = None
+
+    def __enter__(self) -> "_AvailableMemorySampler":
+        """Take an initial sample and start periodic sampling."""
+        self._record_sample()
+        self._thread = Thread(target=self._sample_until_stopped, daemon=True)
+        self._thread.start()
+        return self
+
+    def __exit__(
+        self,
+        _exc_type: type[BaseException] | None,
+        _exc_value: BaseException | None,
+        _traceback: TracebackType | None,
+    ) -> None:
+        """Stop periodic sampling and take a final sample."""
+        self._stop_event.set()
+        if self._thread is not None:
+            self._thread.join()
+        self._record_sample()
+
+    @property
+    def samples(self) -> list[tuple[datetime.datetime, int]]:
+        """Return timestamped available-memory samples."""
+        return self._samples.copy()
+
+    def _sample_until_stopped(self) -> None:
+        while not self._stop_event.wait(self._interval_seconds):
+            self._record_sample()
+
+    def _record_sample(self) -> None:
+        try:
+            available_bytes = psutil.virtual_memory().available
+        except (OSError, psutil.Error):
+            logger.warning("Unable to sample system-available memory", exc_info=True)
+            return
+        self._samples.append((datetime.datetime.now(), available_bytes))
 
 
 class RunResult:
@@ -51,10 +103,83 @@ class RunResult:
         self.operation_descr = operation_descr
         self.secs_taken = secs_taken
         self.run_details = run_details
+        self.available_memory_start_bytes: int | None = None
+        self.available_memory_min_bytes: int | None = None
+        self.available_memory_drop_bytes: int | None = None
 
     def __repr__(self) -> str:
         """Return a representation of the benchmark result."""
         return f"{self.__class__}({self.__dict__})"
+
+
+def _record_result_memory(
+    result: RunResult,
+    samples: list[tuple[datetime.datetime, int]],
+    include_final_sample: bool = False,
+) -> None:
+    interval_end = result.run_datetime
+    interval_start = interval_end - datetime.timedelta(seconds=result.secs_taken)
+    result_interval_end = interval_end + (
+        datetime.timedelta(seconds=_MEMORY_SAMPLE_INTERVAL_SECONDS)
+        if include_final_sample
+        else datetime.timedelta()
+    )
+    samples_at_start = [sample for sample in samples if sample[0] <= interval_start]
+    samples_during_result = [
+        sample
+        for sample in samples
+        if interval_start <= sample[0] <= result_interval_end
+    ]
+    if not samples_at_start or not samples_during_result:
+        return
+
+    result.available_memory_start_bytes = max(samples_at_start, key=lambda x: x[0])[1]
+    result.available_memory_min_bytes = min(
+        sample[1] for sample in samples_during_result
+    )
+    result.available_memory_drop_bytes = max(
+        0,
+        result.available_memory_start_bytes - result.available_memory_min_bytes,
+    )
+
+
+def _append_results(results_path: Path, results: list[RunResult]) -> None:
+    result_rows = [vars(result) for result in results]
+    new_columns = list(dict.fromkeys(column for row in result_rows for column in row))
+    if not results_path.exists():
+        with results_path.open("w", newline="", encoding="utf-8") as results_file:
+            writer = csv.DictWriter(results_file, fieldnames=new_columns)
+            writer.writeheader()
+            writer.writerows(result_rows)
+        return
+
+    temporary_path: Path | None = None
+    try:
+        with results_path.open(newline="", encoding="utf-8") as old_file:
+            reader = csv.DictReader(old_file)
+            old_columns = reader.fieldnames or []
+            columns = [
+                *old_columns,
+                *(column for column in new_columns if column not in old_columns),
+            ]
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                newline="",
+                encoding="utf-8",
+                dir=results_path.parent,
+                delete=False,
+            ) as new_file:
+                temporary_path = Path(new_file.name)
+                writer = csv.DictWriter(new_file, fieldnames=columns)
+                writer.writeheader()
+                writer.writerows(reader)
+                writer.writerows(result_rows)
+
+        temporary_path.replace(results_path)
+    except Exception:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
+        raise
 
 
 def _should_run_benchmark_function(
@@ -222,11 +347,30 @@ def run_benchmarks(
                         logger.info(
                             f"{benchmarks_subdir}.{module_name}.{function_name} start"
                         )
-                        function_results = function(tmp_dir=tmp_dir)
+                        with _AvailableMemorySampler() as memory_sampler:
+                            function_results = function(tmp_dir=tmp_dir)
+                        memory_samples = memory_sampler.samples
                         if isinstance(function_results, list) is False:
                             function_results = [function_results]
-                        for function_result in function_results:
+                        last_result_index = max(
+                            (
+                                index
+                                for index, result in enumerate(function_results)
+                                if isinstance(result, RunResult)
+                            ),
+                            default=-1,
+                        )
+                        for result_index, function_result in enumerate(
+                            function_results
+                        ):
                             if isinstance(function_result, RunResult) is True:
+                                _record_result_memory(
+                                    function_result,
+                                    memory_samples,
+                                    include_final_sample=(
+                                        result_index == last_result_index
+                                    ),
+                                )
                                 logger.info(
                                     f"{benchmarks_subdir}.{module_name}."
                                     f"{function_name} ready in "
@@ -246,12 +390,7 @@ def run_benchmarks(
         results_dir = Path(__file__).resolve().parent / results_subdir
         results_dir.mkdir(parents=True, exist_ok=True)
         results_path = results_dir / results_filename
-        results_dictlist = [vars(result) for result in results]
-        results_df = pd.DataFrame(results_dictlist)
-        if not results_path.exists():
-            results_df.to_csv(results_path, index=False)
-        else:
-            results_df.to_csv(results_path, index=False, mode="a", header=False)
+        _append_results(results_path, results)
 
         # Generate reports
         reporter.generate_reports(results_path, output_dir=results_dir)

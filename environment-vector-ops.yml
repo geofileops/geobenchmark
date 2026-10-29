@@ -10,6 +10,7 @@ dependencies:
   - geofileops
   - geopandas-base
   - matplotlib-base
+  - psutil
   # linting
   - mypy =2.4.0
   - pandas-stubs

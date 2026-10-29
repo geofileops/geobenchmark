@@ -143,8 +143,30 @@ def test_generate_reports_accepts_duplicate_latest_rows_with_same_description(
 ) -> None:
     results = pd.DataFrame(
         [
-            ("2026-01-01", "geopandas", "1.0.1", "buffer", "Buffer", 2.0, None),
-            ("2026-01-01", "geopandas", "1.2.0", "buffer", "Buffer", 1.0, None),
+            (
+                "2026-01-01",
+                "geopandas",
+                "1.0.1",
+                "buffer",
+                "Buffer",
+                2.0,
+                None,
+                1_000_000,
+                900_000,
+                100_000,
+            ),
+            (
+                "2026-01-01",
+                "geopandas",
+                "1.2.0",
+                "buffer",
+                "Buffer",
+                1.0,
+                None,
+                1_000_000,
+                800_000,
+                200_000,
+            ),
         ],
         columns=[
             "run_datetime",
@@ -154,6 +176,9 @@ def test_generate_reports_accepts_duplicate_latest_rows_with_same_description(
             "operation_descr",
             "secs_taken",
             "run_details",
+            "available_memory_start_bytes",
+            "available_memory_min_bytes",
+            "available_memory_drop_bytes",
         ],
     )
     results_path = tmp_path / "benchmark_results.csv"
