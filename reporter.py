@@ -43,10 +43,18 @@ def generate_reports(results_path: Path, output_dir: Path):
             package_operation_df = package_df.loc[
                 benchmark_df["operation"] == operation
             ]
-            operation_descr = package_operation_df[
-                package_operation_df["run_datetime"]
-                == package_operation_df["run_datetime"].max()
-            ]["operation_descr"].item()
+            latest_run_datetime = package_operation_df["run_datetime"].max()
+            operation_descriptions = package_operation_df.loc[
+                package_operation_df["run_datetime"] == latest_run_datetime,
+                "operation_descr",
+            ].drop_duplicates()
+            if len(operation_descriptions) != 1:
+                raise ValueError(
+                    "Expected one operation description for "
+                    f"{package!r}/{operation!r} at run_datetime "
+                    f"{latest_run_datetime!r}, found {len(operation_descriptions)}."
+                )
+            operation_descr = operation_descriptions.iloc[0]
             package_operation_df = package_operation_df[
                 ["package_version", "run_details", "secs_taken"]
             ]
@@ -119,6 +127,7 @@ def generate_reports(results_path: Path, output_dir: Path):
         size=(8, 6),
         linestyle="None",
         gridlines="y",
+        y_value_limit=10000,
     )
 
 
@@ -146,9 +155,9 @@ def save_chart(
     ] = "line",
     gridlines: Optional[Literal["both", "x", "y"]] = None,
     linestyle: Optional[str] = None,
+    y_value_limit: Optional[float] = None,
 ):
-    """
-    Render and save a chart.
+    """Render and save a chart.
 
     Args:
         df (pd.DataFrame): The data to plot. The index should be the x axis values.
@@ -172,6 +181,9 @@ def save_chart(
                 - 'both': draw grid lines on both axes
             If None, the default for the style used is used. Defaults to None.
         linestyle (Optional[str], optional): _description_. Defaults to None.
+        y_value_limit (float, optional): values above this limit are omitted from
+            the plotted series and marked at the top of the chart. Defaults to
+            None.
 
     Raises:
         Exception: _description_
@@ -188,6 +200,10 @@ def save_chart(
         raise Exception(
             f"df has non-numeric columns, so cannot be plotted: {non_numeric_columns}"
         )
+    if y_value_limit is not None and (
+        not math.isfinite(y_value_limit) or y_value_limit <= 0
+    ):
+        raise ValueError("y_value_limit must be a positive finite number.")
 
     # Init some things based on input
     rot = 90
@@ -200,7 +216,14 @@ def save_chart(
         plt.yscale(yscale)
 
     # Plot
-    df.plot(ax=axs, kind=plot_kind, rot=rot, title=title, linestyle=linestyle)
+    plot_df = df
+    if y_value_limit is not None:
+        plot_df = df.where(df <= y_value_limit)
+    plot_df.plot(ax=axs, kind=plot_kind, rot=rot, title=title, linestyle=linestyle)
+    tick_positions = axs.get_xticks()
+    tick_labels = [tick.get_text().replace("_", "\n") for tick in axs.get_xticklabels()]
+    axs.set_xticks(tick_positions)
+    axs.set_xticklabels(tick_labels, rotation=rot)
     if point_labels_to_right:
         x_left, x_right = axs.get_xlim()
         axs.set_xlim(right=x_right + (x_right - x_left) * 0.1)
@@ -219,57 +242,115 @@ def save_chart(
     markers = ("o", "^", "*", "+", "x", ".", "s", "D", "v", "P", "X", "d")
     max_y_value = None
     min_y_value = None
-    for i, line in enumerate(axs.get_lines()):
-        line.set_marker(markers[i % len(markers)])
+    for series_index, line in enumerate(axs.get_lines()):
+        line.set_marker(markers[series_index % len(markers)])
         label_above_line = True
 
-        for index, row in enumerate(df.itertuples()):
-            for row_fieldname, row_fieldvalue in row._asdict().items():
-                if row_fieldname != "Index":
-                    if max_y_value is None or row_fieldvalue > max_y_value:
-                        max_y_value = row_fieldvalue
-                    if min_y_value is None or row_fieldvalue < min_y_value:
-                        min_y_value = row_fieldvalue
-                    if print_labels_on_points is True:
-                        # Format label
-                        if y_value_formatter is not None:
-                            text = y_value_formatter.format(row_fieldvalue)
-                        else:
-                            text = str(row_fieldvalue)
+        for index, row_fieldvalue in enumerate(df.iloc[:, series_index]):
+            if pd.isna(row_fieldvalue):
+                continue
+            if y_value_limit is not None and row_fieldvalue > y_value_limit:
+                continue
+            if max_y_value is None or row_fieldvalue > max_y_value:
+                max_y_value = row_fieldvalue
+            if min_y_value is None or row_fieldvalue < min_y_value:
+                min_y_value = row_fieldvalue
+            if print_labels_on_points is True:
+                if y_value_formatter is not None:
+                    text = y_value_formatter.format(row_fieldvalue)
+                else:
+                    text = str(row_fieldvalue)
 
-                        if point_labels_to_right:
-                            xytext = (5, 0)
-                            horizontalalignment = "left"
-                        else:
-                            if label_above_line is True:
-                                xytext = (0, 5)
-                                label_above_line = False
-                            else:
-                                xytext = (0, -15)
-                                label_above_line = True
-                            horizontalalignment = "center"
+                if point_labels_to_right:
+                    xytext = (5, 0)
+                    horizontalalignment = "left"
+                else:
+                    if label_above_line is True:
+                        xytext = (0, 5)
+                        label_above_line = False
+                    else:
+                        xytext = (0, -15)
+                        label_above_line = True
+                    horizontalalignment = "center"
 
-                        axs.annotate(
-                            text=text,
-                            # s=text,
-                            # xy=(row.Index, row_fieldvalue),
-                            xy=(index, row_fieldvalue),
-                            xytext=xytext,
-                            textcoords="offset points",
-                            ha=horizontalalignment,
-                        )
+                axs.annotate(
+                    text=text,
+                    xy=(index, row_fieldvalue),
+                    xytext=xytext,
+                    textcoords="offset points",
+                    ha=horizontalalignment,
+                    fontweight="normal",
+                )
 
     # Set bottom and top values for y axis
+    has_overflow = y_value_limit is not None and bool(df.gt(y_value_limit).any().any())
     if max_y_value is not None:
         max_y_value *= 1.1
+    elif has_overflow:
+        max_y_value = y_value_limit
     if max_y_value is not None and math.isnan(max_y_value) is False:
-        plt.ylim(bottom=0, top=max_y_value)
-    else:
+        if yscale == "log":
+            plt.ylim(top=max_y_value)
+        else:
+            plt.ylim(bottom=0, top=max_y_value)
+    elif yscale != "log":
         plt.ylim(bottom=0)
+
+    if has_overflow:
+        overflow_count_by_x: dict[int, int] = {}
+        plotted_lines = axs.get_lines()
+        for x_index, row in enumerate(df.itertuples(index=False, name=None)):
+            for series_index, value in enumerate(row):
+                if value > y_value_limit:
+                    overflow_count = overflow_count_by_x.get(x_index, 0)
+                    overflow_count_by_x[x_index] = overflow_count + 1
+                    if y_value_formatter is not None:
+                        text = y_value_formatter.format(value)
+                    else:
+                        text = str(value)
+                    marker_x = x_index + 0.15
+                    marker_y = 1.09 + 0.07 * overflow_count
+                    marker_color = (
+                        plotted_lines[series_index].get_color()
+                        if series_index < len(plotted_lines)
+                        else "black"
+                    )
+                    axs.annotate(
+                        text="",
+                        xy=(x_index, 1.15),
+                        xycoords=("data", "axes fraction"),
+                        xytext=(x_index, 1.0),
+                        textcoords=("data", "axes fraction"),
+                        arrowprops={"arrowstyle": "->"},
+                        annotation_clip=False,
+                    )
+                    axs.plot(
+                        marker_x,
+                        marker_y,
+                        marker=markers[series_index % len(markers)],
+                        color=marker_color,
+                        linestyle="None",
+                        transform=axs.get_xaxis_transform(),
+                        clip_on=False,
+                    )
+                    axs.annotate(
+                        text=text,
+                        xy=(marker_x, marker_y),
+                        xycoords=("data", "axes fraction"),
+                        xytext=(8, 0),
+                        textcoords="offset points",
+                        ha="left",
+                        va="center",
+                        fontweight="normal",
+                        annotation_clip=False,
+                    )
 
     # Set legend to the right of the chart
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
     plt.tight_layout()
+    if has_overflow:
+        fig.subplots_adjust(top=0.78)
+        axs.set_title(axs.get_title(), y=1.15, pad=3)
 
     # Save the file if it doesn't exist yet
     if not output_path.exists():

@@ -161,7 +161,7 @@ def dissolve(tmp_dir: Path) -> RunResult:
     # dissolve
     start_time_dissolve = datetime.now()
     dgdf = dgpd.from_geopandas(gdf, npartitions=_nb_parallel)
-    dgdf = dgdf.dissolve(split_out=_nb_parallel)  # type: ignore
+    dgdf = dgdf.dissolve()  # type: ignore
     dgdf = dgdf.explode()
     result_gdf = dgdf.compute()
     logger.info(
