@@ -34,6 +34,8 @@ def test_save_chart_masks_and_annotates_values_above_limit(
         y_value_formatter="{0:.0f}",
         yscale="log",
         y_value_limit=10_000,
+        size=(8, 6),
+        overflow_axes_top=0.82,
     )
 
     axes = figures[0].axes[0]
@@ -76,6 +78,7 @@ def test_save_chart_masks_and_annotates_values_above_limit(
     title_bbox = axes.title.get_window_extent()
     assert not annotation_bbox.overlaps(title_bbox)
     assert title_bbox.y1 <= figures[0].bbox.y1
+    assert figures[0].bbox.y1 - title_bbox.y1 < figures[0].bbox.height * 0.04
     assert axes.get_ylim()[1] < 10_000
     assert chart_path.is_file()
     pd.testing.assert_frame_equal(df, original_df)
@@ -161,3 +164,6 @@ def test_generate_reports_accepts_duplicate_latest_rows_with_same_description(
     reporter.generate_reports(results_path, tmp_path / "reports")
 
     assert charts[0]["title"] == "geopandas-buffer\n(Buffer)"
+    assert "overflow_axes_top" not in charts[0]
+    assert charts[1]["title"] == "Comparison of libraries, time in sec\n"
+    assert charts[1]["overflow_axes_top"] == 0.82

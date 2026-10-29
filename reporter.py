@@ -2,9 +2,9 @@
 
 import ast
 import math
-from pathlib import Path
 import shutil
 import tempfile
+from pathlib import Path
 from typing import Literal, Optional, Tuple
 
 import matplotlib.pyplot as plt
@@ -128,6 +128,7 @@ def generate_reports(results_path: Path, output_dir: Path):
         linestyle="None",
         gridlines="y",
         y_value_limit=10000,
+        overflow_axes_top=0.82,
     )
 
 
@@ -156,6 +157,7 @@ def save_chart(
     gridlines: Optional[Literal["both", "x", "y"]] = None,
     linestyle: Optional[str] = None,
     y_value_limit: Optional[float] = None,
+    overflow_axes_top: float = 0.79,
 ):
     """Render and save a chart.
 
@@ -184,6 +186,8 @@ def save_chart(
         y_value_limit (float, optional): values above this limit are omitted from
             the plotted series and marked at the top of the chart. Defaults to
             None.
+        overflow_axes_top (float, optional): top of the axes when overflow values
+            are shown. Defaults to 0.79.
 
     Raises:
         Exception: _description_
@@ -349,7 +353,7 @@ def save_chart(
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
     plt.tight_layout()
     if has_overflow:
-        fig.subplots_adjust(top=0.78)
+        fig.subplots_adjust(top=overflow_axes_top)
         axs.set_title(axs.get_title(), y=1.15, pad=3)
 
     # Save the file if it doesn't exist yet
