@@ -268,12 +268,8 @@ def test_record_result_memory_uses_each_result_interval() -> None:
     benchmarker._record_result_memory(first_result, samples)
     benchmarker._record_result_memory(second_result, samples)
 
-    assert first_result.available_memory_start_bytes == 1_200
-    assert first_result.available_memory_min_bytes == 800
-    assert first_result.available_memory_drop_bytes == 400
-    assert second_result.available_memory_start_bytes == 900
-    assert second_result.available_memory_min_bytes == 600
-    assert second_result.available_memory_drop_bytes == 300
+    assert first_result.max_memory_bytes == 400
+    assert second_result.max_memory_bytes == 300
 
 
 def test_record_result_memory_clamps_increase_and_leaves_missing_samples_null() -> None:
@@ -289,7 +285,7 @@ def test_record_result_memory_clamps_increase_and_leaves_missing_samples_null() 
             (start + timedelta(seconds=0.2), 1_200),
         ],
     )
-    assert result.available_memory_drop_bytes == 0
+    assert result.max_memory_bytes == 0
 
     result_without_interval_samples = benchmarker.RunResult("pkg", "1", "op", "op", 0.1)
     result_without_interval_samples.run_datetime = start + timedelta(seconds=0.3)
@@ -302,9 +298,7 @@ def test_record_result_memory_clamps_increase_and_leaves_missing_samples_null() 
         ],
     )
 
-    assert result_without_interval_samples.available_memory_start_bytes is None
-    assert result_without_interval_samples.available_memory_min_bytes is None
-    assert result_without_interval_samples.available_memory_drop_bytes is None
+    assert result_without_interval_samples.max_memory_bytes is None
 
 
 def test_run_benchmarks_records_each_result_interval(
@@ -357,9 +351,20 @@ def test_run_benchmarks_records_each_result_interval(
     _run_fake_module(monkeypatch, tmp_path, module)
 
     results_df = pd.read_csv(tmp_path / "results" / "benchmark_results.csv")
-    assert results_df["available_memory_start_bytes"].tolist() == [1_000, 900]
-    assert results_df["available_memory_min_bytes"].tolist() == [900, 800]
-    assert results_df["available_memory_drop_bytes"].tolist() == [100, 100]
+    assert results_df.columns.tolist() == [
+        "run_datetime",
+        "package",
+        "package_version",
+        "operation",
+        "operation_descr",
+        "secs_taken",
+        "max_memory_bytes",
+        "run_details",
+    ]
+    assert results_df["max_memory_bytes"].tolist() == [100, 100]
+    assert "available_memory_start_bytes" not in results_df
+    assert "available_memory_min_bytes" not in results_df
+    assert "available_memory_drop_bytes" not in results_df
 
 
 def test_record_result_memory_includes_post_return_sample_only_for_last_result() -> (
@@ -379,8 +384,8 @@ def test_record_result_memory_includes_post_return_sample_only_for_last_result()
     benchmarker._record_result_memory(first_result, samples)
     benchmarker._record_result_memory(last_result, samples, include_final_sample=True)
 
-    assert first_result.available_memory_min_bytes == 900
-    assert last_result.available_memory_min_bytes == 700
+    assert first_result.max_memory_bytes == 100
+    assert last_result.max_memory_bytes == 300
 
 
 def test_append_results_expands_legacy_csv_schema(tmp_path: Path) -> None:
@@ -396,25 +401,30 @@ def test_append_results_expands_legacy_csv_schema(tmp_path: Path) -> None:
     results_path = tmp_path / "benchmark_results.csv"
     pd.DataFrame(
         [
-            ["2026-01-01", "pkg", "1.10", "old", "old", 1.0, None],
+            [
+                "2026-01-01",
+                "pkg",
+                "1.10",
+                "old",
+                "old",
+                1.0,
+                None,
+            ],
         ],
         columns=legacy_columns,
     ).to_csv(results_path, index=False)
     result = benchmarker.RunResult("pkg", "2", "new", "new", 2.0)
-    result.available_memory_start_bytes = 2_000
-    result.available_memory_min_bytes = 1_500
-    result.available_memory_drop_bytes = 500
+    result.max_memory_bytes = 500
 
     benchmarker._append_results(results_path, [result])
 
     results_df = pd.read_csv(results_path, dtype={"package_version": str})
     assert results_df.columns.tolist() == [
-        *legacy_columns,
-        "available_memory_start_bytes",
-        "available_memory_min_bytes",
-        "available_memory_drop_bytes",
+        *legacy_columns[:6],
+        "max_memory_bytes",
+        *legacy_columns[6:],
     ]
     assert results_df.loc[0, "package"] == "pkg"
     assert results_df.loc[0, "package_version"] == "1.10"
-    assert pd.isna(results_df.loc[0, "available_memory_drop_bytes"])
-    assert results_df.loc[1, "available_memory_drop_bytes"] == 500
+    assert pd.isna(results_df.loc[0, "max_memory_bytes"])
+    assert results_df.loc[1, "max_memory_bytes"] == 500

@@ -151,8 +151,6 @@ def test_generate_reports_accepts_duplicate_latest_rows_with_same_description(
                 "Buffer",
                 2.0,
                 None,
-                1_000_000,
-                900_000,
                 100_000,
             ),
             (
@@ -163,8 +161,6 @@ def test_generate_reports_accepts_duplicate_latest_rows_with_same_description(
                 "Buffer",
                 1.0,
                 None,
-                1_000_000,
-                800_000,
                 200_000,
             ),
         ],
@@ -176,9 +172,7 @@ def test_generate_reports_accepts_duplicate_latest_rows_with_same_description(
             "operation_descr",
             "secs_taken",
             "run_details",
-            "available_memory_start_bytes",
-            "available_memory_min_bytes",
-            "available_memory_drop_bytes",
+            "max_memory_bytes",
         ],
     )
     results_path = tmp_path / "benchmark_results.csv"

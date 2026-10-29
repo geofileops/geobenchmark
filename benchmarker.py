@@ -102,10 +102,8 @@ class RunResult:
         self.operation = operation
         self.operation_descr = operation_descr
         self.secs_taken = secs_taken
+        self.max_memory_bytes: int | None = None
         self.run_details = run_details
-        self.available_memory_start_bytes: int | None = None
-        self.available_memory_min_bytes: int | None = None
-        self.available_memory_drop_bytes: int | None = None
 
     def __repr__(self) -> str:
         """Return a representation of the benchmark result."""
@@ -133,13 +131,11 @@ def _record_result_memory(
     if not samples_at_start or not samples_during_result:
         return
 
-    result.available_memory_start_bytes = max(samples_at_start, key=lambda x: x[0])[1]
-    result.available_memory_min_bytes = min(
-        sample[1] for sample in samples_during_result
-    )
-    result.available_memory_drop_bytes = max(
+    available_memory_start_bytes = max(samples_at_start, key=lambda x: x[0])[1]
+    available_memory_min_bytes = min(sample[1] for sample in samples_during_result)
+    result.max_memory_bytes = max(
         0,
-        result.available_memory_start_bytes - result.available_memory_min_bytes,
+        available_memory_start_bytes - available_memory_min_bytes,
     )
 
 
@@ -158,10 +154,18 @@ def _append_results(results_path: Path, results: list[RunResult]) -> None:
         with results_path.open(newline="", encoding="utf-8") as old_file:
             reader = csv.DictReader(old_file)
             old_columns = reader.fieldnames or []
-            columns = [
-                *old_columns,
-                *(column for column in new_columns if column not in old_columns),
+            new_columns_to_add = [
+                column for column in new_columns if column not in old_columns
             ]
+            if "secs_taken" in old_columns:
+                insert_at = old_columns.index("secs_taken") + 1
+                columns = [
+                    *old_columns[:insert_at],
+                    *new_columns_to_add,
+                    *old_columns[insert_at:],
+                ]
+            else:
+                columns = [*old_columns, *new_columns_to_add]
             with tempfile.NamedTemporaryFile(
                 mode="w",
                 newline="",
