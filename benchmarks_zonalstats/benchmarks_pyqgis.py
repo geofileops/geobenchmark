@@ -1,20 +1,17 @@
-"""
-Module to benchmark zonalstats.
-"""
+"""Benchmark zonal statistics using PyQGIS."""
 
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import List
 
 import geopandas as gpd
 import pandas as pd
-import qgis.core  # type: ignore
 import qgis.analysis  # type: ignore
+import qgis.core  # type: ignore
 
+import testdata
 from benchmarker import RunResult
 from benchmarks_zonalstats import _common
-import testdata
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +24,8 @@ def _get_version() -> str:
     return f"{qgis.core.Qgis.QGIS_VERSION}".replace("v", "")
 
 
-def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
+def zonalstats_1band(tmp_dir: Path) -> list[RunResult]:
+    """Benchmark PyQGIS statistics for one raster band."""
     # Init
     results = []
     vector_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
@@ -78,7 +76,7 @@ def zonalstats_1band(tmp_dir: Path) -> List[RunResult]:
     columns = [f.name() for f in vlayer.fields()] + ["geometry"]
     # columns_types = [f.typeName() for f in vlayer.fields()]
     data = [
-        dict(zip(columns, f.attributes() + [f.geometry().asWkt()]))
+        dict(zip(columns, [*f.attributes(), f.geometry().asWkt()], strict=True))
         for f in vlayer.getFeatures()
     ]
 

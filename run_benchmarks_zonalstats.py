@@ -1,7 +1,10 @@
+"""Entry point for running zonal statistics benchmarks."""
+
 import benchmarker
 
 
-def main():
+def main() -> None:
+    """Run zonal statistics benchmarks."""
     all_benchmarks = False
     if not all_benchmarks:
         # debug: only run specific benchmark modules/function(s)

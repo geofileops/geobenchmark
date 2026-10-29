@@ -1,18 +1,16 @@
-"""
-Module to benchmark geofileops operations.
-"""
+"""Benchmark vector operations using GeoFileOps."""
 
-from datetime import datetime
 import inspect
 import logging
 import multiprocessing
+from datetime import datetime
 from pathlib import Path
 
 import geofileops as gfo
 import shapely
 
-from benchmarker import RunResult
 import testdata
+from benchmarker import RunResult
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +27,7 @@ if nb_cores < _nb_parallel:
 
 
 def buffer(tmp_dir: Path) -> RunResult:
+    """Benchmark buffering the agricultural parcels with GeoFileOps."""
     # Init
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
@@ -53,9 +52,7 @@ def buffer(tmp_dir: Path) -> RunResult:
 
 
 def _clip(tmp_dir: Path) -> RunResult:
-    """
-    Clip doesn't work for the other libraries, so no use to activate it here.
-    """
+    """Skip clipping because it does not work with the other benchmark libraries."""
     # Init
     input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
@@ -85,6 +82,7 @@ def _clip(tmp_dir: Path) -> RunResult:
 
 
 def dissolve_nogroupby(tmp_dir: Path) -> RunResult:
+    """Benchmark dissolving the agricultural parcels without grouping."""
     # Init
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
@@ -113,6 +111,7 @@ def dissolve_nogroupby(tmp_dir: Path) -> RunResult:
 
 
 def dissolve_groupby(tmp_dir: Path) -> RunResult:
+    """Benchmark dissolving the agricultural parcels by land-use class."""
     # Init
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
 
@@ -144,6 +143,7 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
 
 
 def intersection(tmp_dir: Path) -> RunResult:
+    """Benchmark intersection of the two agricultural parcel datasets."""
     # Init
     input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
@@ -269,6 +269,7 @@ def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
 
 
 def union(tmp_dir: Path) -> RunResult:
+    """Benchmark union of the two agricultural parcel datasets."""
     # Init
     input1_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     input2_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)

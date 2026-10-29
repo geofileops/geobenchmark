@@ -16,7 +16,7 @@
   environment setup example may not match the environment files present.
 
 ## Quality checks
-- Follow the Python and Ruff settings in [project.toml](project.toml),
+- Follow the Python and Ruff settings in [pyproject.toml](pyproject.toml),
   including the 88-character line limit.
 - Run the configured pre-commit checks when practical. They include Ruff
   formatting, Ruff linting, and mypy; CI runs pre-commit as well. See

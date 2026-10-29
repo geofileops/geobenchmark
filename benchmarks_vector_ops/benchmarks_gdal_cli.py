@@ -1,15 +1,15 @@
 """Module to benchmark GDAL CLI vector algorithms."""
 
-from datetime import datetime
 import logging
+from datetime import datetime
 from pathlib import Path
 
 import geofileops as gfo
-from osgeo import gdal
 import shapely
+from osgeo import gdal
 
-from benchmarker import RunResult
 import testdata
+from benchmarker import RunResult
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +20,7 @@ _package_version = gdal.VersionInfo("RELEASE_NAME")
 
 
 def buffer(tmp_dir: Path) -> RunResult:
+    """Benchmark GDAL CLI buffering of the agricultural parcels."""
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     output_path = tmp_dir / f"{input_path.stem}_{_package}_buffer.gpkg"
 
@@ -48,7 +49,7 @@ def buffer(tmp_dir: Path) -> RunResult:
         output_path.unlink(missing_ok=True)
 
 
-def _layer_algebra(
+def _layer_algebra(  # noqa: PLR0917
     tmp_dir: Path,
     input_path: Path,
     method_path: Path,
@@ -87,6 +88,7 @@ def _layer_algebra(
 
 
 def intersection(tmp_dir: Path) -> RunResult:
+    """Benchmark GDAL CLI intersection of the two agricultural parcel datasets."""
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     method_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
 
@@ -101,6 +103,7 @@ def intersection(tmp_dir: Path) -> RunResult:
 
 
 def union(tmp_dir: Path) -> RunResult:
+    """Benchmark GDAL CLI union of the two agricultural parcel datasets."""
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
     method_path, _ = testdata.TestFile.AGRIPRC_2019.get_file(tmp_dir)
 

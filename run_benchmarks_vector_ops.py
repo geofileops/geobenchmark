@@ -1,7 +1,10 @@
+"""Entry point for running vector operation benchmarks."""
+
 import benchmarker
 
 
-def main():
+def main() -> None:
+    """Run vector operation benchmarks."""
     all_benchmarks = False
     if not all_benchmarks:
         # debug: only run specific benchmark modules/function(s)

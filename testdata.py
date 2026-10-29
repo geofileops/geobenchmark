@@ -9,14 +9,12 @@ import urllib.request
 import warnings
 import zipfile
 from pathlib import Path
-from typing import Optional, Union
 
+import geofileops as gfo
 import geopandas as gpd
 import pyproj
 import shapely
 import shapely.affinity
-
-import geofileops as gfo
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +52,13 @@ class TestFile(enum.Enum):
         "Sentinel 2 NDVI 2020",
     )
 
-    def __init__(self, value, url: str, filename: str, descr: Optional[str]):
+    def __init__(
+        self,
+        value: tuple[int, str, str, str],
+        url: str,
+        filename: str,
+        descr: str | None,
+    ) -> None:
         """Create a test file.
 
         Args:
@@ -93,15 +97,15 @@ class TestFile(enum.Enum):
         return (testfile_path, description)
 
 
-def create_testfile(
+def create_testfile(  # noqa: PLR0917
     bbox: tuple[float, float, float, float],
     geoms: int,
     polys_per_geom: int,
     points_per_poly: int,
     poly_width: float = 30_000,
     poly_height: float = 30_000,
-    crs: Union[int, str, pyproj.CRS, None] = None,
-    dst_dir: Optional[Path] = None,
+    crs: int | str | pyproj.CRS | None = None,
+    dst_dir: Path | None = None,
 ) -> tuple[Path, str]:
     """Creates a test file.
 
@@ -212,7 +216,7 @@ def create_testfile(
     return (testfile_path, descr)
 
 
-def _move_xy(x, y, max_x, max_y):
+def _move_xy(x: int, y: int, max_x: int, max_y: int) -> tuple[int, int]:
     # Move to next location in the grid
     if x >= max_x:
         x = 0
@@ -226,11 +230,11 @@ def _move_xy(x, y, max_x, max_y):
     return x, y
 
 
-def _create_complex_poly_points(
+def _create_complex_poly_points(  # noqa: PLR0917
     xmin: float,
     ymin: float,
     width: float,
-    height: float,
+    height: float,  # noqa: ARG001
     nb_points: int,
     nb_points_tol: float = 0.1,
 ) -> shapely.Polygon:
@@ -380,7 +384,7 @@ def _create_complex_square_poly(
 
 
 def _download_samplefile(
-    url: str, dst_name: str, dst_dir: Optional[Path] = None
+    url: str, dst_name: str, dst_dir: Path | None = None
 ) -> Path:
     """Download a sample file to dest_path.
 
@@ -455,7 +459,8 @@ def _download_samplefile(
                     tmp_path = tmp_paths[0]
                     warnings.warn(
                         f"Should find 1 geofile, found {len(tmp_paths)}. "
-                        f"Will use first.\n{pprint.pformat(tmp_paths)}"
+                        f"Will use first.\n{pprint.pformat(tmp_paths)}",
+                        stacklevel=2,
                     )
 
             if tmp_path.suffix.lower() in (".gpkg", ".shp"):
@@ -464,25 +469,24 @@ def _download_samplefile(
                 else:
                     logger.info(f"Convert tmp file to {dst_path}")
                     gfo.makevalid(tmp_path, dst_path, keep_empty_geoms=False)
+            elif dst_path.suffix == tmp_path.suffix:
+                shutil.move(tmp_path, dst_path)
             else:
-                if dst_path.suffix == tmp_path.suffix:
-                    shutil.move(tmp_path, dst_path)
-                else:
-                    raise ValueError(f"Cannot convert {tmp_path} to {dst_path}")
+                raise ValueError(f"Cannot convert {tmp_path} to {dst_path}")
         finally:
             shutil.rmtree(tmp_dir, ignore_errors=True)
 
     return dst_path
 
 
-def _prepare_dst_path(dst_name: str, dst_dir: Optional[Path] = None):
+def _prepare_dst_path(dst_name: str, dst_dir: Path | None = None) -> Path:
     if dst_dir is None:
         return Path(tempfile.gettempdir()) / "geofileops_sampledata" / dst_name
     else:
         return dst_dir / dst_name
 
 
-def _determine_number_points(width: float):
+def _determine_number_points(width: float) -> None:
     """Function to determine the number of points for different line distances.
 
     Useful to fill the empirical_values_reference dict in _estimate_line_distance.

@@ -1,18 +1,16 @@
-# -*- coding: utf-8 -*-
-"""
-Module to benchmark geopandas operations using pyogrio for IO.
-"""
+"""Benchmark GeoPandas I/O operations using Pyogrio."""
 
-from datetime import datetime
 import itertools
 import logging
 import os
+from datetime import datetime
 from pathlib import Path
-import pyogrio
-from typing import List
+from types import TracebackType
 
-from benchmarker import RunResult
+import pyogrio
+
 import testdata
+from benchmarker import RunResult
 
 ################################################################################
 # Some init
@@ -33,12 +31,16 @@ def _get_version() -> str:
     return f"{pyogrio.__version__}".replace("v", "")
 
 
-class set_env_variables(object):
-    def __init__(self, env_variables_to_set: dict):
+class set_env_variables:
+    """Temporarily override process environment variables."""
+
+    def __init__(self, env_variables_to_set: dict[str, str]) -> None:
+        """Save the environment variable values to set."""
         self.env_variables_backup: dict[str, str] = {}
         self.env_variables_to_set = env_variables_to_set
 
-    def __enter__(self):
+    def __enter__(self) -> None:
+        """Set the requested environment variable values."""
         # Only if a name and value is specified...
         for name, value in self.env_variables_to_set.items():
             # If the environment variable is already defined, make backup
@@ -48,19 +50,26 @@ class set_env_variables(object):
             # Set env variable to value
             os.environ[name] = value
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(
+        self,
+        _exc_type: type[BaseException] | None,
+        _exc_value: BaseException | None,
+        _exc_traceback: TracebackType | None,
+    ) -> None:
+        """Restore the environment variables changed on entry."""
         # Set variables that were backed up back to original value
         for name, value in self.env_variables_backup.items():
             # Recover backed up value
             os.environ[name] = value
         # For variables without backup, remove them
-        for name, value in self.env_variables_to_set.items():
+        for name, _ in self.env_variables_to_set.items():
             if name not in self.env_variables_backup:
                 if name in os.environ:
                     del os.environ[name]
 
 
-def write_dataframe(tmp_dir: Path) -> List[RunResult]:
+def write_dataframe(tmp_dir: Path) -> list[RunResult]:
+    """Benchmark Pyogrio write performance across SQLite pragma combinations."""
     # Init
     results = []
     (
@@ -85,7 +94,7 @@ def write_dataframe(tmp_dir: Path) -> List[RunResult]:
     }
 
     sqlite_pragma_combinations_tmp = []
-    for lengths in range(0, len(sqlite_possible_pragmas) + 1):
+    for lengths in range(len(sqlite_possible_pragmas) + 1):
         for subset in itertools.combinations(sqlite_possible_pragmas, lengths):
             sqlite_pragma_combinations_tmp.append(list(subset))
 
@@ -104,7 +113,7 @@ def write_dataframe(tmp_dir: Path) -> List[RunResult]:
                 sqlite_pragma_combinations.append(sqlite_pragma_combination)
             else:
                 sqlite_pragma_combinations.append(
-                    [sqlite_caches_size] + list(sqlite_pragma_combination)
+                    [sqlite_caches_size, *sqlite_pragma_combination]
                 )
 
     print(f"Nb pragma combinations found: {len(sqlite_pragma_combinations)}")

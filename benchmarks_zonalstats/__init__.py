@@ -1,0 +1,1 @@
+"""Zonal statistics benchmark implementations."""

@@ -5,23 +5,25 @@ import math
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Literal, Optional, Tuple
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pandas.api
+from packaging.version import Version
 from PIL import Image
 
 A4_LONG_SIDE = 11.69
 A4_SHORT_SIDE = 8.27
 
 
-def generate_reports(results_path: Path, output_dir: Path):
+def generate_reports(results_path: Path, output_dir: Path) -> None:
+    """Generate detailed benchmark charts and a library comparison overview."""
     benchmark_df = pd.read_csv(results_path)
 
     def format_run_details(run_details: object) -> str:
-        if run_details is None or run_details == np.nan:
+        if run_details is None or pd.isna(run_details):
             return ""
         if isinstance(run_details, str):
             run_details = ast.literal_eval(run_details)
@@ -75,8 +77,6 @@ def generate_reports(results_path: Path, output_dir: Path):
             )
 
     # Report for last version of each package+operation for comparison
-    from packaging.version import Version
-
     benchmark_df["version_suffix"] = benchmark_df["package_version"].apply(
         lambda x: x.split("-")[1] if len(x.split("-")) > 1 else ""
     )
@@ -132,15 +132,15 @@ def generate_reports(results_path: Path, output_dir: Path):
     )
 
 
-def save_chart(
+def save_chart(  # noqa: PLR0917
     df: pd.DataFrame,
     title: str,
     output_path: Path,
-    yscale: Optional[Literal["linear", "log", "symlog", "logit"]] = None,
-    y_value_formatter: Optional[str] = None,
+    yscale: Literal["linear", "log", "symlog", "logit"] | None = None,
+    y_value_formatter: str | None = None,
     print_labels_on_points: bool = False,
     point_labels_to_right: bool = False,
-    size: Tuple[float, float] = (8, 4),
+    size: tuple[float, float] = (8, 4),
     plot_kind: Literal[
         "line",
         "bar",
@@ -154,11 +154,11 @@ def save_chart(
         "scatter",
         "hexbin",
     ] = "line",
-    gridlines: Optional[Literal["both", "x", "y"]] = None,
-    linestyle: Optional[str] = None,
-    y_value_limit: Optional[float] = None,
+    gridlines: Literal["both", "x", "y"] | None = None,
+    linestyle: str | None = None,
+    y_value_limit: float | None = None,
     overflow_axes_top: float = 0.79,
-):
+) -> None:
     """Render and save a chart.
 
     Args:
@@ -192,7 +192,6 @@ def save_chart(
     Raises:
         Exception: _description_
     """
-
     # Init
     # Check input
     non_numeric_columns = [
