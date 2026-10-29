@@ -383,9 +383,7 @@ def _create_complex_square_poly(
     return poly_complex
 
 
-def _download_samplefile(
-    url: str, dst_name: str, dst_dir: Path | None = None
-) -> Path:
+def _download_samplefile(url: str, dst_name: str, dst_dir: Path | None = None) -> Path:
     """Download a sample file to dest_path.
 
     If it is zipped, it will be unzipped. If needed, it will be converted to
