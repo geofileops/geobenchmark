@@ -98,7 +98,7 @@ run_datetime,package,package_version,operation,operation_descr,secs_taken,max_me
 2026-10-29 20:40:35.653813,duckdb-gpkg,1.5.6,dissolve_groupby,"dissolve agri parcels BEFL (~500k polygons), groupby=GWSGRPH_LB",549.402718,2089361408,"{'nb_cpu': 12, 'file_format': 'gpkg', 'io': 'ST_Read (single-threaded), GDAL COPY to GPKG'}"
 2026-10-29 20:45:14.998223,duckdb-gpkg,1.5.6,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),279.128676,502067200,"{'nb_cpu': 12, 'file_format': 'gpkg', 'io': 'ST_Read (single-threaded), GDAL COPY to GPKG'}"
 2026-10-29 20:54:27.997506,duckdb-gpkg,1.5.6,union,union of 2 agri parcel layers BEFL (2*~500k polygons),552.762625,10888466432,"{'nb_cpu': 12, 'file_format': 'gpkg', 'io': 'ST_Read (single-threaded), GDAL COPY to GPKG'}"
-2026-10-29 20:54:43.423593,geofileops,0.12.0,buffer,buffer on agri parcel layer BEFL (~500k polygons),15.103998,2532483072,{'nb_cpu': 12}
+2026-10-30 09:27:42.523351,geofileops,0.12.0,buffer,buffer on agri parcel layer BEFL (~500k polygons),13.852904,2170654720,{'nb_cpu': 12}
 2026-10-29 20:55:09.020713,geofileops,0.12.0,dissolve_groupby,"dissolve on agri parcels BEFL (~500k polygons), groupby=[GWSGRPH_LB]",25.453134,2256220160,{'nb_cpu': 12}
 2026-10-29 20:55:36.094858,geofileops,0.12.0,dissolve,dissolve on agri parcels BEFL (~500k polygons),26.980852,2369822720,{'nb_cpu': 12}
 2026-10-29 20:55:58.452342,geofileops,0.12.0,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),22.264703,1941954560,{'nb_cpu': 12}
