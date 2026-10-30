@@ -2,6 +2,7 @@
 
 import csv
 import datetime
+import gc
 import importlib
 import inspect
 import logging
@@ -38,6 +39,7 @@ class _AvailableMemorySampler:
 
     def __enter__(self) -> "_AvailableMemorySampler":
         """Take an initial sample and start periodic sampling."""
+        gc.collect()
         self._record_sample()
         self._thread = Thread(target=self._sample_until_stopped, daemon=True)
         self._thread.start()
