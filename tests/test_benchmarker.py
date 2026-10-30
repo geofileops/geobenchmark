@@ -219,16 +219,22 @@ def test_run_benchmarks_restores_module_configuration_on_error(
 
 def test_available_memory_sampler_takes_initial_and_final_samples(monkeypatch) -> None:
     available_values = iter([1_000, 800])
+    sample_events = []
+
+    def virtual_memory():
+        sample_events.append("sample")
+        return SimpleNamespace(available=next(available_values))
+
     monkeypatch.setattr(
-        benchmarker.psutil,
-        "virtual_memory",
-        lambda: SimpleNamespace(available=next(available_values)),
+        benchmarker.gc, "collect", lambda: sample_events.append("collect")
     )
+    monkeypatch.setattr(benchmarker.psutil, "virtual_memory", virtual_memory)
 
     with benchmarker._AvailableMemorySampler(interval_seconds=60) as sampler:
         pass
 
     assert [value for _, value in sampler.samples] == [1_000, 800]
+    assert sample_events == ["collect", "sample", "sample"]
 
 
 def test_available_memory_sampler_takes_final_sample_on_exception(monkeypatch) -> None:
