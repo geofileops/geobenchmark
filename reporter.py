@@ -96,11 +96,22 @@ def generate_reports(results_path: Path, output_dir: Path) -> None:
     benchmark_maxversion_df = benchmark_df.set_index(
         ["package", "operation", "version", "version_suffix"]
     )
+    comparison_columns = ["secs_taken"]
+    if "max_memory_bytes" in benchmark_df.columns:
+        comparison_columns.append("max_memory_bytes")
     benchmark_maxversion_df = (
         benchmark_maxversion_df.loc[
             benchmark_maxversion_df.index.isin(benchmark_maxversions_df.index)
         ].reset_index()
-    )[["package", "version", "version_suffix", "operation", "secs_taken"]]
+    )[
+        [
+            "package",
+            "version",
+            "version_suffix",
+            "operation",
+            *comparison_columns,
+        ]
+    ]
     # Only keep the last benchmark result value for the same package+operation+version,
     # otherwise pivot_table takes the average seconds
     benchmark_maxversion_df = (
@@ -110,14 +121,14 @@ def generate_reports(results_path: Path, output_dir: Path) -> None:
         .last()
         .reset_index()
     )
-    benchmark_maxversion_df = benchmark_maxversion_df.pivot_table(
-        index="operation", columns=["package", "version", "version_suffix"]
+    benchmark_maxversion_time_df = benchmark_maxversion_df.pivot_table(
+        index="operation",
+        columns=["package", "version", "version_suffix"],
+        values="secs_taken",
     )
-    # Drop the "secs_taken" level to cleanup legend in chart
-    benchmark_maxversion_df = benchmark_maxversion_df.droplevel(level=0, axis=1)
     results_report_path = output_dir / "GeoBenchmark.png"
     save_chart(
-        df=benchmark_maxversion_df,
+        df=benchmark_maxversion_time_df,
         title="Comparison of libraries, time in sec\n",
         output_path=results_report_path,
         yscale="log",
@@ -130,6 +141,31 @@ def generate_reports(results_path: Path, output_dir: Path) -> None:
         y_value_limit=10000,
         overflow_axes_top=0.82,
     )
+
+    if (
+        "max_memory_bytes" in comparison_columns
+        and benchmark_maxversion_df["max_memory_bytes"].notna().any()
+    ):
+        memory_df = (
+            benchmark_maxversion_df.pivot_table(
+                index="operation",
+                columns=["package", "version", "version_suffix"],
+                values="max_memory_bytes",
+            )
+            / 1_000_000_000
+        )
+        results_report_path = output_dir / "GeoBenchmark_max_memory.png"
+        save_chart(
+            df=memory_df,
+            title="Comparison of libraries, max memory in GB\n",
+            output_path=results_report_path,
+            print_labels_on_points=True,
+            point_labels_to_right=True,
+            y_value_formatter="{0:.2f}",
+            size=(8, 6),
+            linestyle="None",
+            gridlines="y",
+        )
 
 
 def save_chart(  # noqa: PLR0917
