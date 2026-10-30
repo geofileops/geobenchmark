@@ -53,6 +53,20 @@ def test_public_benchmark_discovery_and_whitelist() -> None:
     assert not _should_run_benchmark_function("buffer", ["intersection"])
 
 
+def test_run_result_includes_os_in_run_details(monkeypatch) -> None:
+    monkeypatch.setattr(benchmarker.platform, "system", lambda: "TestOS")
+    details = {"driver": "test"}
+
+    result = benchmarker.RunResult(
+        "pkg", "1", "op", "description", 0.2, run_details=details
+    )
+    result_without_details = benchmarker.RunResult("pkg", "1", "op", "description", 0.2)
+
+    assert result.run_details == {"driver": "test", "os": "TestOS"}
+    assert details == {"driver": "test"}
+    assert result_without_details.run_details == {"os": "TestOS"}
+
+
 def test_run_benchmarks_without_module_defaults_keeps_tmp_dir_call(
     monkeypatch, tmp_path: Path
 ) -> None:
