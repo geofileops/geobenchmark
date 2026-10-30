@@ -11,11 +11,14 @@ def main() -> None:
         benchmarker.run_benchmarks(
             benchmarks_subdir="benchmarks_vector_ops",
             results_subdir="results_vector_ops",
-            modules=["benchmarks_geofileops"],
-            # modules=[("benchmarks_duckdb", {"file_format": "geoparquet"})],
-            # modules=[("benchmarks_duckdb", {"file_format": "gpkg"})],
-            # modules=["benchmarks_geopandas"],
-            # modules=["benchmarks_dask_geopandas"],
+            modules=[
+                "benchmarks_geofileops",
+                # "benchmarks_gdal_cli",
+                # ("benchmarks_duckdb", {"file_format": "geoparquet"}),
+                # ("benchmarks_duckdb", {"file_format": "gpkg"}),
+                # "benchmarks_geopandas",
+                # "benchmarks_dask_geopandas",
+            ],
             # functions=["buffer"],
             # functions=["_symdif_complexpolys_agri"],
         )
