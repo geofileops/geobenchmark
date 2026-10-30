@@ -6,6 +6,7 @@ import gc
 import importlib
 import inspect
 import logging
+import platform
 import tempfile
 from contextlib import nullcontext
 from pathlib import Path
@@ -14,6 +15,7 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Any
 
 import psutil
+
 import reporter
 
 if TYPE_CHECKING:
@@ -169,19 +171,22 @@ def run_benchmarks(
                                 interval_start = interval_end - datetime.timedelta(
                                     seconds=function_result.secs_taken
                                 )
+                                include_final_sample = result_index == last_result_index
+                                function_result.max_memory_bytes = (
+                                    memory_sampler.memory_increased_max(
+                                        interval_start=interval_start,
+                                        interval_end=interval_end,
+                                        include_final_sample=include_final_sample,
+                                    )
+                                )
+
                                 memory_increased_bytes = (
                                     memory_sampler.memory_increased_bytes(
                                         interval_start=interval_start,
                                         interval_end=interval_end,
-                                        include_final_sample=(
-                                            result_index == last_result_index
-                                        ),
+                                        include_final_sample=include_final_sample,
                                     )
                                 )
-                                function_result.max_memory_bytes = max(
-                                    memory_increased_bytes
-                                )
-
                                 memory_increased_str = ", ".join(
                                     memory_sampler.format_gb(memory_bytes)
                                     for memory_bytes in memory_increased_bytes
@@ -359,7 +364,7 @@ class RunResult:
             operation_descr (str): Description of the operation.
             secs_taken (float): Seconds the operation took.
             run_details (dict, optional): (Important) details of this specific
-                run with impact on performance. Eg. # CPU's used,...
+                run with impact on performance, including the operating system.
         """
         self.run_datetime = datetime.datetime.now()
         self.package = package
@@ -368,7 +373,7 @@ class RunResult:
         self.operation_descr = operation_descr
         self.secs_taken = secs_taken
         self.max_memory_bytes: int | None = None
-        self.run_details = run_details
+        self.run_details = {**(run_details or {}), "os": platform.system()}
 
     def __repr__(self) -> str:
         """Return a representation of the benchmark result."""

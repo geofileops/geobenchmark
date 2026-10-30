@@ -231,43 +231,44 @@ def test_run_benchmarks_restores_module_configuration_on_error(
     assert active_configuration == []
 
 
-def test_available_memory_sampler_takes_initial_and_final_samples(monkeypatch) -> None:
+def test_memory_sampler_takes_initial_and_final_samples(monkeypatch) -> None:
     available_values = iter([1_000, 800])
     sample_events = []
 
     def virtual_memory():
         sample_events.append("sample")
-        return SimpleNamespace(available=next(available_values))
+        return SimpleNamespace(total=2_000, available=next(available_values))
 
     monkeypatch.setattr(
         benchmarker.gc, "collect", lambda: sample_events.append("collect")
     )
     monkeypatch.setattr(benchmarker.psutil, "virtual_memory", virtual_memory)
 
-    with benchmarker._AvailableMemorySampler(interval_seconds=60) as sampler:
+    with benchmarker._MemorySampler(interval_seconds=60) as sampler:
         pass
 
-    assert [value for _, value in sampler.samples] == [1_000, 800]
+    assert [value for _, value in sampler.available_memory_samples] == [1_000, 800]
+    assert [value for _, value in sampler.memory_used_samples] == [1_000, 1_200]
     assert sample_events == ["collect", "sample", "sample"]
 
 
-def test_available_memory_sampler_takes_final_sample_on_exception(monkeypatch) -> None:
+def test_memory_sampler_takes_final_sample_on_exception(monkeypatch) -> None:
     available_values = iter([1_000, 800])
     monkeypatch.setattr(
         benchmarker.psutil,
         "virtual_memory",
-        lambda: SimpleNamespace(available=next(available_values)),
+        lambda: SimpleNamespace(total=2_000, available=next(available_values)),
     )
-    sampler = benchmarker._AvailableMemorySampler(interval_seconds=60)
+    sampler = benchmarker._MemorySampler(interval_seconds=60)
 
     with pytest.raises(RuntimeError, match="benchmark failed"):
         with sampler:
             raise RuntimeError("benchmark failed")
 
-    assert [value for _, value in sampler.samples] == [1_000, 800]
+    assert [value for _, value in sampler.available_memory_samples] == [1_000, 800]
 
 
-def test_record_result_memory_uses_each_result_interval() -> None:
+def test_memory_sampler_calculates_increase_for_each_result_interval() -> None:
     start = datetime(2026, 1, 1)
     samples = [
         (start, 1_200),
@@ -280,45 +281,56 @@ def test_record_result_memory_uses_each_result_interval() -> None:
         (start + timedelta(seconds=0.5), 600),
         (start + timedelta(seconds=0.55), 650),
     ]
-    first_result = benchmarker.RunResult("pkg", "1", "first", "first", 0.2)
-    first_result.run_datetime = start + timedelta(seconds=0.25)
-    second_result = benchmarker.RunResult("pkg", "1", "second", "second", 0.2)
-    second_result.run_datetime = start + timedelta(seconds=0.55)
+    sampler = benchmarker._MemorySampler()
+    sampler._total_memory_bytes = 2_000
+    sampler._samples = samples
 
-    benchmarker._record_result_memory(first_result, samples)
-    benchmarker._record_result_memory(second_result, samples)
+    assert (
+        sampler.memory_increased_max(
+            interval_start=start + timedelta(seconds=0.05),
+            interval_end=start + timedelta(seconds=0.25),
+        )
+        == 400
+    )
+    assert (
+        sampler.memory_increased_max(
+            interval_start=start + timedelta(seconds=0.35),
+            interval_end=start + timedelta(seconds=0.55),
+        )
+        == 300
+    )
 
-    assert first_result.max_memory_bytes == 400
-    assert second_result.max_memory_bytes == 300
 
-
-def test_record_result_memory_clamps_increase_and_leaves_missing_samples_null() -> None:
+def test_memory_sampler_clamps_increase_and_returns_none_without_samples() -> None:
     start = datetime(2026, 1, 1)
-    result = benchmarker.RunResult("pkg", "1", "op", "op", 0.2)
-    result.run_datetime = start + timedelta(seconds=0.2)
+    sampler = benchmarker._MemorySampler()
+    sampler._total_memory_bytes = 2_000
+    sampler._samples = [
+        (start, 1_000),
+        (start + timedelta(seconds=0.1), 1_100),
+        (start + timedelta(seconds=0.2), 1_200),
+    ]
 
-    benchmarker._record_result_memory(
-        result,
-        [
-            (start, 1_000),
-            (start + timedelta(seconds=0.1), 1_100),
-            (start + timedelta(seconds=0.2), 1_200),
-        ],
-    )
-    assert result.max_memory_bytes == 0
-
-    result_without_interval_samples = benchmarker.RunResult("pkg", "1", "op", "op", 0.1)
-    result_without_interval_samples.run_datetime = start + timedelta(seconds=0.3)
-    benchmarker._record_result_memory(
-        result_without_interval_samples,
-        [
-            (start, 1_000),
-            (start + timedelta(seconds=0.1), 900),
-            (start + timedelta(seconds=0.5), 700),
-        ],
+    assert (
+        sampler.memory_increased_max(
+            interval_start=start + timedelta(seconds=0.2),
+            interval_end=start + timedelta(seconds=0.3),
+        )
+        == 0
     )
 
-    assert result_without_interval_samples.max_memory_bytes is None
+    sampler._samples = [
+        (start, 1_000),
+        (start + timedelta(seconds=0.1), 900),
+        (start + timedelta(seconds=0.5), 700),
+    ]
+    assert (
+        sampler.memory_increased_max(
+            interval_start=start + timedelta(seconds=0.2),
+            interval_end=start + timedelta(seconds=0.3),
+        )
+        is None
+    )
 
 
 def test_run_benchmarks_records_each_result_interval(
@@ -337,10 +349,12 @@ def test_run_benchmarks_records_each_result_interval(
     for result in results:
         result.run_datetime = result_end
 
-    class FixedMemorySampler:
+    class FixedMemorySampler(benchmarker._MemorySampler):
         """Provide deterministic samples to the runner test."""
 
         def __enter__(self) -> "FixedMemorySampler":
+            self._total_memory_bytes = 2_000
+            self._samples = samples
             return self
 
         def __exit__(
@@ -351,17 +365,13 @@ def test_run_benchmarks_records_each_result_interval(
         ) -> None:
             pass
 
-        @property
-        def samples(self) -> list[tuple[datetime, int]]:
-            return samples
-
     module = ModuleType("benchmarks_fake")
 
     def buffer(tmp_dir: Path) -> list[benchmarker.RunResult]:  # noqa: ARG001
         return results
 
     _add_benchmark_function(module, buffer)
-    monkeypatch.setattr(benchmarker, "_AvailableMemorySampler", FixedMemorySampler)
+    monkeypatch.setattr(benchmarker, "_MemorySampler", FixedMemorySampler)
     monkeypatch.setattr(
         benchmarker.reporter,
         "generate_reports",
@@ -387,25 +397,32 @@ def test_run_benchmarks_records_each_result_interval(
     assert "available_memory_drop_bytes" not in results_df
 
 
-def test_record_result_memory_includes_post_return_sample_only_for_last_result() -> (
-    None
-):
+def test_memory_sampler_includes_post_return_sample_only_for_last_result() -> None:
     end = datetime(2026, 1, 1)
     samples = [
         (end - timedelta(seconds=0.2), 1_000),
         (end, 900),
         (end + timedelta(seconds=0.01), 700),
     ]
-    first_result = benchmarker.RunResult("pkg", "1", "first", "first", 0.2)
-    first_result.run_datetime = end
-    last_result = benchmarker.RunResult("pkg", "1", "last", "last", 0.1)
-    last_result.run_datetime = end
+    sampler = benchmarker._MemorySampler()
+    sampler._total_memory_bytes = 2_000
+    sampler._samples = samples
 
-    benchmarker._record_result_memory(first_result, samples)
-    benchmarker._record_result_memory(last_result, samples, include_final_sample=True)
-
-    assert first_result.max_memory_bytes == 100
-    assert last_result.max_memory_bytes == 300
+    assert (
+        sampler.memory_increased_max(
+            interval_start=end - timedelta(seconds=0.2),
+            interval_end=end,
+        )
+        == 100
+    )
+    assert (
+        sampler.memory_increased_max(
+            interval_start=end - timedelta(seconds=0.1),
+            interval_end=end,
+            include_final_sample=True,
+        )
+        == 300
+    )
 
 
 def test_append_results_expands_legacy_csv_schema(tmp_path: Path) -> None:
