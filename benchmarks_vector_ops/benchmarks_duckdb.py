@@ -500,14 +500,15 @@ def _run_benchmark(  # noqa: PLR0917
         output_path.unlink(missing_ok=True)
 
 
-def buffer(tmp_dir: Path) -> RunResult:
+def buffer_agriprc(tmp_dir: Path) -> RunResult:
     """Benchmark DuckDB's buffer operation for the configured file format."""
     input_path, _ = _test_file(tmp_dir, "AGRIPRC_2018")
     return _run_benchmark(
-        "buffer",
-        "buffer agri parcels BEFL (~500k polygons), distance=1",
-        input_path,
-        tmp_dir,
+        operation="buffer",
+        operation_descr="buffer agri parcels BEFL (~500k polygons), distance=1",
+        input1_path=input_path,
+        tmp_dir=tmp_dir,
+        result_operation="buffer_agriprc",
     )
 
 
@@ -527,10 +528,11 @@ def dissolve(tmp_dir: Path) -> RunResult:
     """Benchmark DuckDB's dissolve operation for the configured file format."""
     input_path, _ = _test_file(tmp_dir, "AGRIPRC_2018")
     return _run_benchmark(
-        "dissolve",
-        "dissolve agri parcels BEFL (~500k polygons)",
-        input_path,
-        tmp_dir,
+        operation="dissolve",
+        operation_descr="dissolve agri parcels BEFL (~500k polygons)",
+        input1_path=input_path,
+        tmp_dir=tmp_dir,
+        result_operation="dissolve",
     )
 
 
@@ -538,10 +540,11 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     """Benchmark DuckDB's grouped dissolve for the configured file format."""
     input_path, _ = _test_file(tmp_dir, "AGRIPRC_2018")
     return _run_benchmark(
-        "dissolve_groupby",
-        "dissolve agri parcels BEFL (~500k polygons), groupby=GWSGRPH_LB",
-        input_path,
-        tmp_dir,
+        operation="dissolve_groupby",
+        operation_descr="dissolve agri parcels BEFL (~500k polys), groupby=GWSGRPH_LB",
+        input1_path=input_path,
+        tmp_dir=tmp_dir,
+        result_operation="dissolve_groupby",
     )
 
 
@@ -550,11 +553,11 @@ def intersection(tmp_dir: Path) -> RunResult:
     input1_path, _ = _test_file(tmp_dir, "AGRIPRC_2018")
     input2_path, _ = _test_file(tmp_dir, "AGRIPRC_2019")
     return _run_benchmark(
-        "intersection",
-        "intersection of 2 agri parcel layers BEFL (2*~500k polygons)",
-        input1_path,
-        tmp_dir,
-        input2_path,
+        operation="intersection",
+        operation_descr="intersection of 2 agri parcel layers BEFL (2*~500k polygons)",
+        input1_path=input1_path,
+        tmp_dir=tmp_dir,
+        input2_path=input2_path,
     )
 
 
@@ -563,11 +566,11 @@ def union(tmp_dir: Path) -> RunResult:
     input1_path, _ = _test_file(tmp_dir, "AGRIPRC_2018")
     input2_path, _ = _test_file(tmp_dir, "AGRIPRC_2019")
     return _run_benchmark(
-        "union",
-        "union of 2 agri parcel layers BEFL (2*~500k polygons)",
-        input1_path,
-        tmp_dir,
-        input2_path,
+        operation="union",
+        operation_descr="union of 2 agri parcel layers BEFL (2*~500k polygons)",
+        input1_path=input1_path,
+        tmp_dir=tmp_dir,
+        input2_path=input2_path,
     )
 
 
@@ -575,15 +578,16 @@ def _join_by_location_intersects(tmp_dir: Path) -> RunResult:
     input1_path, _ = _test_file(tmp_dir, "AGRIPRC_2018")
     input2_path, _ = _test_file(tmp_dir, "AGRIPRC_2019")
     return _run_benchmark(
-        "join_by_location_intersects",
-        "intersects join between 2 agri parcel layers BEFL (2*~500k polygons)",
-        input1_path,
-        tmp_dir,
-        input2_path,
+        operation="join_by_location_intersects",
+        operation_descr="intersects join of 2 agri parcel layers BEFL (2*~500k polys)",
+        input1_path=input1_path,
+        tmp_dir=tmp_dir,
+        input2_path=input2_path,
+        result_operation="join_by_location_intersects",
     )
 
 
-def _symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
+def _symdif_complexpolys_agriprc(tmp_dir: Path) -> RunResult:
     import geofileops as gfo  # noqa: PLC0415
     import shapely  # noqa: PLC0415
 
@@ -603,10 +607,10 @@ def _symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
         dst_dir=tmp_dir,
     )
     return _run_benchmark(
-        "symdifference",
-        f"symmetric difference between {input1_descr} and {input2_descr}",
-        input1_path,
-        tmp_dir,
-        input2_path,
-        result_operation="symdif_complexpolys_agri",
+        operation="symdifference",
+        operation_descr=f"symmetric difference of {input1_descr} and {input2_descr}",
+        input1_path=input1_path,
+        tmp_dir=tmp_dir,
+        input2_path=input2_path,
+        result_operation="symdif_complexpolys_agriprc",
     )

@@ -26,7 +26,7 @@ if nb_cores < _nb_parallel:
     )
 
 
-def buffer(tmp_dir: Path) -> RunResult:
+def buffer_agriprc(tmp_dir: Path) -> RunResult:
     """Benchmark buffering the agricultural parcels with GeoFileOps."""
     # Init
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
@@ -40,7 +40,7 @@ def buffer(tmp_dir: Path) -> RunResult:
     result = RunResult(
         package=_package,
         package_version=_package_version,
-        operation="buffer",
+        operation="buffer_agriprc",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="buffer on agri parcel layer BEFL (~500k polygons)",
         run_details={"nb_cpu": _nb_parallel},
@@ -224,7 +224,7 @@ def _join_by_location_intersects(tmp_dir: Path) -> RunResult:
         operation=function_name,
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr=(
-            "join_by_location_intersects between 2 agri parcel layers BEFL "
+            "join_by_location_intersects of 2 agri parcel layers BEFL "
             "(2*~500.000 polygons)"
         ),
         run_details={"nb_cpu": _nb_parallel},
@@ -236,8 +236,8 @@ def _join_by_location_intersects(tmp_dir: Path) -> RunResult:
     return result
 
 
-def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
-    """Symmetric difference between very complex polygons and standard polygons.
+def symdif_complexpolys_agriprc(tmp_dir: Path) -> RunResult:
+    """Symmetric difference of very complex polygons and standard polygons.
 
     The complex polygons are created as such:
 
@@ -249,7 +249,7 @@ def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
     Changelog:
 
         - 2025-01-23: make complex polygons a lot more complex to be able to see the
-          difference between geofileops 0.9.1 and 0.10.0
+          difference of geofileops 0.9.1 and 0.10.0
     """
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
@@ -284,7 +284,7 @@ def symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
         package_version=_package_version,
         operation=function_name,
         secs_taken=(datetime.now() - start_time).total_seconds(),
-        operation_descr=f"{function_name} between {input1_descr} and {input2_descr}",
+        operation_descr=f"{function_name} of {input1_descr} and {input2_descr}",
         run_details={"nb_cpu": _nb_parallel},
     )
 

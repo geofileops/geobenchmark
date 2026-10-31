@@ -19,10 +19,11 @@ _package = "geopandas"
 _package_version = gpd.__version__
 
 
-def buffer(tmp_dir: Path) -> RunResult:
+def buffer_agriprc(tmp_dir: Path) -> RunResult:
     """Benchmark buffering the agricultural parcels with GeoPandas."""
     # Init
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
+    function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
 
     # Go!
     # Read input file
@@ -45,7 +46,7 @@ def buffer(tmp_dir: Path) -> RunResult:
     result = RunResult(
         package=_package,
         package_version=_package_version,
-        operation="buffer",
+        operation=function_name,
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="buffer agri parcels BEFL (~500k polygons)",
     )
@@ -59,6 +60,7 @@ def buffer_sealed(tmp_dir: Path) -> RunResult:
     """Benchmark buffering the sealed surfaces with GeoPandas."""
     # Init
     input_path, _ = testdata.TestFile.SEALED_2019.get_file(tmp_dir)
+    function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
 
     # Go!
     # Read input file
@@ -81,7 +83,7 @@ def buffer_sealed(tmp_dir: Path) -> RunResult:
     result = RunResult(
         package=_package,
         package_version=_package_version,
-        operation="buffer_sealed",
+        operation=function_name,
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="buffer sealed surfaces BEFL (~2.6M polygons)",
     )
@@ -254,7 +256,7 @@ def intersection(tmp_dir: Path) -> RunResult:
 
 
 def _symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
-    """Symmetric difference between very complex polygons and standard polygons.
+    """Symmetric difference of very complex polygons and standard polygons.
 
     The complex polygons are created as such:
 
@@ -268,7 +270,7 @@ def _symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
     Changelog:
 
         - 2025-01-23: make complex polygons a lot more complex to be able to see the
-          difference between geofileops 0.9.1 and 0.10.0
+          difference of geofileops 0.9.1 and 0.10.0
     """
     # Init
     function_name = inspect.currentframe().f_code.co_name  # type: ignore[union-attr]
@@ -314,7 +316,7 @@ def _symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
         package_version=_package_version,
         operation=function_name,
         secs_taken=secs_taken,
-        operation_descr=f"{function_name} between {input1_descr} and {input2_descr}",
+        operation_descr=f"{function_name} of {input1_descr} and {input2_descr}",
     )
 
     # Cleanup and return
