@@ -27,7 +27,7 @@ if nb_cores < _nb_parallel:
     )
 
 
-def buffer(tmp_dir: Path) -> RunResult:
+def buffer_agriprc(tmp_dir: Path) -> RunResult:
     """Benchmark buffering the agricultural parcels with Dask-GeoPandas."""
     # Init
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
@@ -70,7 +70,7 @@ def buffer(tmp_dir: Path) -> RunResult:
     result = RunResult(
         package=_package,
         package_version=_package_version,
-        operation="buffer",
+        operation="buffer_agriprc",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr="buffer agri parcels BEFL (~500k polygons)",
         run_details={"nb_cpu": _nb_parallel},
@@ -323,7 +323,7 @@ def _join_by_location_intersects(tmp_dir: Path) -> RunResult:
         operation="join_by_location_intersects",
         secs_taken=(datetime.now() - start_time).total_seconds(),
         operation_descr=(
-            "join_by_location_intersects between 2 agri parcel layers BEFL "
+            "join_by_location_intersects of 2 agri parcel layers BEFL "
             "(2*~500.000 polygons)"
         ),
         run_details={"nb_cpu": multiprocessing.cpu_count()},

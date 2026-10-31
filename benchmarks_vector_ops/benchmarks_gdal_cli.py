@@ -19,10 +19,10 @@ _package = "gdal_cli"
 _package_version = gdal.VersionInfo("RELEASE_NAME")
 
 
-def buffer(tmp_dir: Path) -> RunResult:
+def buffer_agriprc(tmp_dir: Path) -> RunResult:
     """Benchmark GDAL CLI buffering of the agricultural parcels."""
     input_path, _ = testdata.TestFile.AGRIPRC_2018.get_file(tmp_dir)
-    output_path = tmp_dir / f"{input_path.stem}_{_package}_buffer.gpkg"
+    output_path = tmp_dir / f"{input_path.stem}_{_package}_bufferagriprc.gpkg"
 
     start_time = datetime.now()
     try:
@@ -41,7 +41,7 @@ def buffer(tmp_dir: Path) -> RunResult:
         return RunResult(
             package=_package,
             package_version=_package_version,
-            operation="buffer",
+            operation="buffer_agriprc",
             secs_taken=secs_taken,
             operation_descr="buffer agri parcels BEFL (~500k polygons)",
         )
@@ -52,7 +52,7 @@ def buffer(tmp_dir: Path) -> RunResult:
 def buffer_sealed(tmp_dir: Path) -> RunResult:
     """Benchmark GDAL CLI buffering of the sealed surfaces."""
     input_path, _ = testdata.TestFile.SEALED_2019.get_file(tmp_dir)
-    output_path = tmp_dir / f"{input_path.stem}_{_package}_buffer.gpkg"
+    output_path = tmp_dir / f"{input_path.stem}_{_package}_buffer_sealed.gpkg"
 
     start_time = datetime.now()
     try:
@@ -147,7 +147,7 @@ def union(tmp_dir: Path) -> RunResult:
     )
 
 
-def _symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
+def _symdif_complexpolys_agriprc(tmp_dir: Path) -> RunResult:
     """Symmetric difference of agricultural parcels with complex polygons.
 
     Test is disabled by default as I stopped it after 53 hours without being completed.
@@ -171,8 +171,8 @@ def _symdif_complexpolys_agri(tmp_dir: Path) -> RunResult:
         input_path=input_path,
         method_path=method_path,
         operation="sym-difference",
-        operation_name="symdif_complexpolys_agri",
+        operation_name="symdif_complexpolys_agriprc",
         operation_descr=(
-            f"symdif_complexpolys_agri between {input_descr} and {method_descr}"
+            f"symmetric difference of {input_descr} and {method_descr}"
         ),
     )
