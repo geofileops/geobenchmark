@@ -206,7 +206,8 @@ def dissolve_groupby(tmp_dir: Path) -> RunResult:
     start_time_dissolve = datetime.now()
     dgdf = dgpd.from_geopandas(gdf, npartitions=_nb_parallel)
     assert isinstance(dgdf, dgpd.GeoDataFrame)
-    dgdf = dgdf.dissolve(by="GWSGRPH_LB", split_out=_nb_parallel)
+    # Multiple output partitions currently fail during GeoDataFrame finalization.
+    dgdf = dgdf.dissolve(by="GWSGRPH_LB", split_out=1)
     dgdf = dgdf.explode()
     result_gdf = dgdf.compute()
     logger.info(

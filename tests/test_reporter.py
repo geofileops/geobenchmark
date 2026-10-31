@@ -143,8 +143,71 @@ def test_generate_reports_accepts_duplicate_latest_rows_with_same_description(
 ) -> None:
     results = pd.DataFrame(
         [
-            ("2026-01-01", "geopandas", "1.0.1", "buffer", "Buffer", 2.0, None),
-            ("2026-01-01", "geopandas", "1.2.0", "buffer", "Buffer", 1.0, None),
+            (
+                "2026-01-01",
+                "geopandas",
+                "1.0.1",
+                "buffer",
+                "Buffer",
+                2.0,
+                None,
+                100_000,
+            ),
+            (
+                "2026-01-01",
+                "geopandas",
+                "1.2.0",
+                "buffer",
+                "Buffer",
+                1.0,
+                None,
+                200_000,
+            ),
+        ],
+        columns=[
+            "run_datetime",
+            "package",
+            "package_version",
+            "operation",
+            "operation_descr",
+            "secs_taken",
+            "run_details",
+            "max_memory_bytes",
+        ],
+    )
+    results_path = tmp_path / "benchmark_results.csv"
+    results.to_csv(results_path, index=False)
+    charts = []
+    monkeypatch.setattr(reporter, "save_chart", lambda **kwargs: charts.append(kwargs))
+
+    reporter.generate_reports(results_path, tmp_path / "reports")
+
+    assert charts[0]["title"] == "geopandas-buffer\n(Buffer)"
+    assert "overflow_axes_top" not in charts[0]
+    assert charts[1]["title"] == "Comparison of libraries, time in sec\n"
+    assert charts[1]["overflow_axes_top"] == 0.82
+    assert charts[2]["title"] == "Comparison of libraries, max memory in GB\n"
+    assert (
+        charts[2]["output_path"] == tmp_path / "reports" / "GeoBenchmark_max_memory.png"
+    )
+    np.testing.assert_allclose(charts[2]["df"].iloc[0, 0], 0.0002)
+    assert charts[2]["y_value_formatter"] == "{0:.2f}"
+
+
+def test_generate_reports_without_memory_data_skips_memory_chart(
+    monkeypatch, tmp_path
+) -> None:
+    results = pd.DataFrame(
+        [
+            (
+                "2026-01-01",
+                "geopandas",
+                "1.0.1",
+                "buffer",
+                "Buffer",
+                2.0,
+                None,
+            )
         ],
         columns=[
             "run_datetime",
@@ -163,7 +226,7 @@ def test_generate_reports_accepts_duplicate_latest_rows_with_same_description(
 
     reporter.generate_reports(results_path, tmp_path / "reports")
 
-    assert charts[0]["title"] == "geopandas-buffer\n(Buffer)"
-    assert "overflow_axes_top" not in charts[0]
-    assert charts[1]["title"] == "Comparison of libraries, time in sec\n"
-    assert charts[1]["overflow_axes_top"] == 0.82
+    assert [chart["title"] for chart in charts] == [
+        "geopandas-buffer\n(Buffer)",
+        "Comparison of libraries, time in sec\n",
+    ]

@@ -1,6 +1,6 @@
 # geobenchmark
-Some benchmarks to compare the performance of some python libraries for a few
-specific use cases:
+Some benchmarks to compare the performance and memory usage of some python libraries
+for a few specific use cases:
 
 1. Vector ops: process large vector geo files, eg. calculate intersections,...
 2. IO: performance to read/write vector geo files
@@ -25,7 +25,7 @@ with a lot of caution!
 Especially the buffer benchmark is at the time of writing for 90% I/O bound 
 in geopandas!
 
-The test files used are not that large (eg. 500k polygons, 350 MB .gpkg), 
+The test files used are not huge (eg. 500k polygons, 350 MB .gpkg),
 but try to strike a balance between being large enough to give an idea on 
 processing time to expect versus the time spent waiting for a benchmark to be 
 run. They also fit in the memory of most desktops, so this makes it possible 
@@ -36,9 +36,14 @@ the speed improvements become (even) more important.
 The benchmarks ran on a Windows workstation and the libraries were constrained
 to use a maximum of 12 logical cores.
 
-The following chart shows the main results of this benchmark.
+This chart shows the time it took to run the vector operations tested for the python
+libraries supported.
 
 ![Geo benchmark](results_vector_ops/GeoBenchmark.png)
+
+This chart shows the maximum memory usage measured.
+
+![Geo benchmark](results_vector_ops/GeoBenchmark_max_memory.png)
 
 ## IO
 

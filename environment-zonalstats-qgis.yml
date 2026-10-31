@@ -8,6 +8,7 @@ dependencies:
   - geofileops
   - geopandas-base
   - matplotlib-base
+  - psutil
   - qgis
   # linting
   - mypy =2.4.0
