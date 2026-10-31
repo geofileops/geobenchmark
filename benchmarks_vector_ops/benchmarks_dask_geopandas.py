@@ -83,6 +83,45 @@ def buffer(tmp_dir: Path) -> RunResult:
     return result
 
 
+def buffer_sealed(tmp_dir: Path) -> RunResult:
+    """Benchmark buffering the sealed surfaces with Dask-GeoPandas."""
+    input_path, _ = testdata.TestFile.SEALED_2019.get_file(tmp_dir)
+
+    start_time = datetime.now()
+    gdf = pyogrio.read_dataframe(input_path)
+    logger.info(f"time for read: {(datetime.now() - start_time).total_seconds()}")
+
+    start_time_buffer = datetime.now()
+    dgdf = dgpd.from_geopandas(gdf, npartitions=_nb_parallel)
+    assert isinstance(dgdf.geometry, dgpd.GeoSeries)
+    dgdf.geometry = dgdf.geometry.buffer(distance=1, resolution=5).compute()
+    assert isinstance(dgdf, dgpd.GeoDataFrame)
+    logger.info(
+        f"time for buffer: {(datetime.now() - start_time_buffer).total_seconds()}"
+    )
+
+    start_time_write = datetime.now()
+    result_gdf = dgdf.compute()
+    result_gdf.geometry = _geoseries_util.harmonize_geometrytypes(result_gdf.geometry)
+
+    output_path = tmp_dir / f"{input_path.stem}_{_package}_buf.gpkg"
+    pyogrio.write_dataframe(
+        result_gdf, output_path, layer=output_path.stem, driver="GPKG"
+    )
+    logger.info(f"write took {(datetime.now() - start_time_write).total_seconds()}")
+    result = RunResult(
+        package=_package,
+        package_version=_package_version,
+        operation="buffer_sealed",
+        secs_taken=(datetime.now() - start_time).total_seconds(),
+        operation_descr="buffer sealed surfaces BEFL (~2.6M polygons)",
+        run_details={"nb_cpu": _nb_parallel},
+    )
+
+    output_path.unlink()
+    return result
+
+
 def _clip(tmp_dir: Path) -> RunResult:
     """Skip clipping because current datasets exceed Dask-GeoPandas memory limits.
 

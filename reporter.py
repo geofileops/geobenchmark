@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pandas.api
+from matplotlib.transforms import offset_copy
 from packaging.version import Version
 from PIL import Image
 
@@ -150,8 +151,7 @@ def generate_reports(results_path: Path, output_dir: Path) -> None:
         size=(8, 6),
         linestyle="None",
         gridlines="y",
-        y_value_limit=10000,
-        overflow_axes_top=0.82,
+        y_value_limit=10_000,
     )
 
     if (
@@ -174,9 +174,10 @@ def generate_reports(results_path: Path, output_dir: Path) -> None:
             print_labels_on_points=True,
             point_labels_to_right=True,
             y_value_formatter="{0:.2f}",
-            size=(8, 6),
+            size=(8, 8),
             linestyle="None",
             gridlines="y",
+            y_value_limit=6.0,
         )
 
 
@@ -215,25 +216,28 @@ def save_chart(
         df (pd.DataFrame): The data to plot. The index should be the x axis values.
         secondary_y_df (pd.DataFrame, optional): Data to plot on a secondary y axis.
         title (str): The title of the chart.
-        output_path (Path): _description_
+        output_path (Path): The path where the chart will be saved.
         yscale (Literal["linear", "log", "symlog", "logit"], optional): y scale to use.
         y_value_formatter (str, optional): a formatter for the y axes and
             labels. Examples:
               - {0:.2%} for a percentage.
               - {0:.2f} for a float with two decimals.
             Defaults to None.
-        print_labels_on_points (bool, optional): _description_. Defaults to False.
-        point_labels_to_right (bool, optional): place point labels to the right.
-            Defaults to False.
-        size (Tuple[float, float], optional): _description_. Defaults to (8, 4).
-        plot_kind (str, optional): _description_. Defaults to "line".
+        print_labels_on_points (bool, optional): Whether to print labels on the points.
+        Defaults to False.
+        point_labels_to_right (bool, optional): Whether to place point labels to the
+            right. Defaults to False.
+        size (Tuple[float, float], optional): The size of the chart (width, height).
+            Defaults to (8, 4).
+        plot_kind (str, optional): The kind of plot to create. Defaults to "line".
         gridlines (str, optional): where to draw grid lines:
 
                 - 'x': draw grid lines on the x axis
                 - 'y': draw grid lines on the x axis
                 - 'both': draw grid lines on both axes
             If None, the default for the style used is used. Defaults to None.
-        linestyle (Optional[str], optional): _description_. Defaults to None.
+        linestyle (Optional[str], optional): The style of the lines in the chart.
+            Defaults to None.
         y_value_limit (float, optional): values above this limit are omitted from
             the plotted series and marked at the top of the chart. Defaults to
             None.
@@ -437,53 +441,95 @@ def save_chart(
         axs.set_ylim(bottom=0)
 
     if has_overflow:
-        overflow_count_by_x: dict[int, int] = {}
         plotted_lines = axs.get_lines()
+        overflow_values_by_x = []
         for x_index, row in enumerate(df.itertuples(index=False, name=None)):
-            for series_index, value in enumerate(row):
-                if value > y_value_limit:
-                    overflow_count = overflow_count_by_x.get(x_index, 0)
-                    overflow_count_by_x[x_index] = overflow_count + 1
-                    if y_value_formatter is not None:
-                        text = y_value_formatter.format(value)
-                    else:
-                        text = str(value)
-                    marker_x = x_index + 0.15
-                    marker_y = 1.09 + 0.07 * overflow_count
-                    marker_color = (
-                        plotted_lines[series_index].get_color()
-                        if series_index < len(plotted_lines)
-                        else "black"
-                    )
-                    axs.annotate(
-                        text="",
-                        xy=(x_index, 1.15),
-                        xycoords=("data", "axes fraction"),
-                        xytext=(x_index, 1.0),
-                        textcoords=("data", "axes fraction"),
-                        arrowprops={"arrowstyle": "->"},
-                        annotation_clip=False,
-                    )
-                    axs.plot(
-                        marker_x,
-                        marker_y,
-                        marker=markers[series_index % len(markers)],
-                        color=marker_color,
-                        linestyle="None",
-                        transform=axs.get_xaxis_transform(),
-                        clip_on=False,
-                    )
-                    axs.annotate(
-                        text=text,
-                        xy=(marker_x, marker_y),
-                        xycoords=("data", "axes fraction"),
-                        xytext=(8, 0),
-                        textcoords="offset points",
-                        ha="left",
-                        va="center",
-                        fontweight="normal",
-                        annotation_clip=False,
-                    )
+            overflow_values = sorted(
+                (
+                    (series_index, value)
+                    for series_index, value in enumerate(row)
+                    if value > y_value_limit
+                ),
+                key=lambda item: item[1],
+            )
+            if overflow_values:
+                overflow_values_by_x.append((x_index, overflow_values))
+
+        max_overflow_count = max(
+            len(overflow_values) for _, overflow_values in overflow_values_by_x
+        )
+        overflow_base_offset = 12
+        overflow_step = 12
+        arrow_head_gap = 10
+        arrow_tail_offset = -3
+        title_gap = 10
+        max_overflow_top_offset = overflow_base_offset + overflow_step * (
+            max_overflow_count - 1
+        )
+
+        for x_index, overflow_values in overflow_values_by_x:
+            overflow_top_offset = overflow_base_offset + overflow_step * (
+                len(overflow_values) - 1
+            )
+            arrow_head_transform = offset_copy(
+                axs.get_xaxis_transform(),
+                fig=fig,
+                y=overflow_top_offset + arrow_head_gap,
+                units="points",
+            )
+            arrow_tail_transform = offset_copy(
+                axs.get_xaxis_transform(),
+                fig=fig,
+                y=arrow_tail_offset,
+                units="points",
+            )
+            axs.annotate(
+                text="",
+                xy=(x_index, 1.0),
+                xycoords=arrow_head_transform,
+                xytext=(x_index, 1.0),
+                textcoords=arrow_tail_transform,
+                arrowprops={"arrowstyle": "->"},
+                annotation_clip=False,
+            )
+            for overflow_count, (series_index, value) in enumerate(overflow_values):
+                if y_value_formatter is not None:
+                    text = y_value_formatter.format(value)
+                else:
+                    text = str(value)
+                marker_x = x_index + 0.15
+                marker_offset = overflow_base_offset + overflow_step * overflow_count
+                marker_color = (
+                    plotted_lines[series_index].get_color()
+                    if series_index < len(plotted_lines)
+                    else "black"
+                )
+                marker_transform = offset_copy(
+                    axs.get_xaxis_transform(),
+                    fig=fig,
+                    y=marker_offset,
+                    units="points",
+                )
+                axs.plot(
+                    marker_x,
+                    1.0,
+                    marker=markers[series_index % len(markers)],
+                    color=marker_color,
+                    linestyle="None",
+                    transform=marker_transform,
+                    clip_on=False,
+                )
+                axs.annotate(
+                    text=text,
+                    xy=(marker_x, 1.0),
+                    xycoords=axs.get_xaxis_transform(),
+                    xytext=(8, marker_offset),
+                    textcoords="offset points",
+                    ha="left",
+                    va="center",
+                    fontweight="normal",
+                    annotation_clip=False,
+                )
 
     # Reserve room for one legend outside the plot area.
     fig.tight_layout()
@@ -506,7 +552,15 @@ def save_chart(
     )
     if has_overflow:
         fig.subplots_adjust(top=overflow_axes_top)
-        axs.set_title(axs.get_title(), y=1.15, pad=3)
+        fig.canvas.draw()
+        axes_height_points = axs.get_window_extent().height * 72 / fig.dpi
+        title_offset = max_overflow_top_offset + title_gap
+        axs.set_title(
+            axs.get_title(),
+            y=1.0 + title_offset / axes_height_points,
+            pad=0,
+            va="bottom",
+        )
 
     # Save the file if it doesn't exist yet
     if not output_path.exists():

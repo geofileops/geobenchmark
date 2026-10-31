@@ -51,6 +51,31 @@ def buffer(tmp_dir: Path) -> RunResult:
     return result
 
 
+def buffer_sealed(tmp_dir: Path) -> RunResult:
+    """Benchmark buffering the sealed surfaces with GeoFileOps."""
+    # Init
+    input_path, _ = testdata.TestFile.SEALED_2019.get_file(tmp_dir)
+
+    # Go!
+    start_time = datetime.now()
+    output_path = tmp_dir / f"{input_path.stem}_buf.gpkg"
+    gfo.buffer(
+        input_path, output_path, distance=1, force=True, nb_parallel=_nb_parallel
+    )
+    result = RunResult(
+        package=_package,
+        package_version=_package_version,
+        operation="buffer_sealed",
+        secs_taken=(datetime.now() - start_time).total_seconds(),
+        operation_descr="buffer on sealed surfaces layer BEFL (~2.6M polygons)",
+        run_details={"nb_cpu": _nb_parallel},
+    )
+
+    # Cleanup and return
+    output_path.unlink()
+    return result
+
+
 def _clip(tmp_dir: Path) -> RunResult:
     """Skip clipping because it does not work with the other benchmark libraries."""
     # Init

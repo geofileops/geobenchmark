@@ -49,6 +49,36 @@ def buffer(tmp_dir: Path) -> RunResult:
         output_path.unlink(missing_ok=True)
 
 
+def buffer_sealed(tmp_dir: Path) -> RunResult:
+    """Benchmark GDAL CLI buffering of the sealed surfaces."""
+    input_path, _ = testdata.TestFile.SEALED_2019.get_file(tmp_dir)
+    output_path = tmp_dir / f"{input_path.stem}_{_package}_buffer.gpkg"
+
+    start_time = datetime.now()
+    try:
+        with gdal.alg.vector.buffer(
+            input=str(input_path),
+            output=str(output_path),
+            distance=1,
+            quadrant_segments=5,
+            output_format="GPKG",
+            overwrite=True,
+        ):
+            pass
+
+        secs_taken = (datetime.now() - start_time).total_seconds()
+        logger.info(f"buffer_sealed took {secs_taken:.2f} s")
+        return RunResult(
+            package=_package,
+            package_version=_package_version,
+            operation="buffer_sealed",
+            secs_taken=secs_taken,
+            operation_descr="buffer sealed surfaces BEFL (~2.6M polygons)",
+        )
+    finally:
+        output_path.unlink(missing_ok=True)
+
+
 def _layer_algebra(  # noqa: PLR0917
     tmp_dir: Path,
     input_path: Path,
