@@ -107,3 +107,6 @@ run_datetime,package,package_version,operation,operation_descr,secs_taken,max_me
 2026-10-30 08:40:41.725775,gdal_cli,3.13.3,buffer,buffer agri parcels BEFL (~500k polygons),31.174854,350416896,
 2026-10-30 08:52:01.961603,gdal_cli,3.13.3,intersection,intersection of 2 agri parcel layers BEFL (2*~500k polygons),680.0955,696152064,
 2026-10-30 09:17:58.535614,gdal_cli,3.13.3,union,union of 2 agri parcel layers BEFL (2*~500k polygons),1556.43618,358432768,
+2026-10-31 10:36:29.961626,dask-geopandas,0.5.0,buffer,buffer agri parcels BEFL (~500k polygons),18.150847,2959548416,"{'nb_cpu': 12, 'os': 'Windows'}"
+2026-10-31 11:12:03.898665,dask-geopandas,0.5.0,dissolve,dissolve agri parcels BEFL (~500k polygons),2132.683491,3725496320,{'os': 'Windows'}
+2026-10-31 11:27:41.411052,dask-geopandas,0.5.0,dissolve_groupby,"dissolve on agri parcels BEFL (~500k polygons), groupby=GWSGRPH_LB",936.635106,2645823488,{'os': 'Windows'}
