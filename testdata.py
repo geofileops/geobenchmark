@@ -51,6 +51,12 @@ class TestFile(enum.Enum):
         "s2_ndvi_2020.tif",
         "Sentinel 2 NDVI 2020",
     )
+    SEALED_2019 = (
+        3,
+        "https://www.landbouwvlaanderen.be/bestanden/gis/AI_verharding_2019_1.zip",
+        "sealedsurfaces_2019.gpkg",
+        "Sealed surfaces 2019",
+    )
 
     def __init__(
         self,

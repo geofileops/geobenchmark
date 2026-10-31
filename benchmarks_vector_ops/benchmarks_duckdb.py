@@ -511,6 +511,18 @@ def buffer(tmp_dir: Path) -> RunResult:
     )
 
 
+def buffer_sealed(tmp_dir: Path) -> RunResult:
+    """Benchmark DuckDB's buffer operation on sealed surfaces."""
+    input_path, _ = _test_file(tmp_dir, "SEALED_2019")
+    return _run_benchmark(
+        operation="buffer",
+        operation_descr="buffer sealed surfaces BEFL (~2.6M polygons), distance=1",
+        input1_path=input_path,
+        tmp_dir=tmp_dir,
+        result_operation="buffer_sealed",
+    )
+
+
 def dissolve(tmp_dir: Path) -> RunResult:
     """Benchmark DuckDB's dissolve operation for the configured file format."""
     input_path, _ = _test_file(tmp_dir, "AGRIPRC_2018")

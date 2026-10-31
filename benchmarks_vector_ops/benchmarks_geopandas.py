@@ -55,6 +55,42 @@ def buffer(tmp_dir: Path) -> RunResult:
     return result
 
 
+def buffer_sealed(tmp_dir: Path) -> RunResult:
+    """Benchmark buffering the sealed surfaces with GeoPandas."""
+    # Init
+    input_path, _ = testdata.TestFile.SEALED_2019.get_file(tmp_dir)
+
+    # Go!
+    # Read input file
+    start_time = datetime.now()
+    gdf = gpd.read_file(input_path)
+    logger.info(f"time for read: {(datetime.now() - start_time).total_seconds()}")
+
+    # Buffer
+    start_time_buffer = datetime.now()
+    gdf.geometry = gdf.geometry.buffer(distance=1, resolution=5)
+    logger.info(
+        f"time for buffer: {(datetime.now() - start_time_buffer).total_seconds()}"
+    )
+
+    # Write to output file
+    start_time_write = datetime.now()
+    output_path = tmp_dir / f"{input_path.stem}_geopandas_buf.gpkg"
+    gdf.to_file(output_path, layer=output_path.stem, driver="GPKG")
+    logger.info(f"write took {(datetime.now() - start_time_write).total_seconds()}")
+    result = RunResult(
+        package=_package,
+        package_version=_package_version,
+        operation="buffer_sealed",
+        secs_taken=(datetime.now() - start_time).total_seconds(),
+        operation_descr="buffer sealed surfaces BEFL (~2.6M polygons)",
+    )
+
+    # Cleanup and return
+    output_path.unlink()
+    return result
+
+
 def _clip(tmp_dir: Path) -> RunResult:
     """Skip clipping because it takes days on the current test datasets.
 

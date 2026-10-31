@@ -12,14 +12,14 @@ def main() -> None:
             benchmarks_subdir="benchmarks_vector_ops",
             results_subdir="results_vector_ops",
             modules=[
-                "benchmarks_geofileops",
-                # "benchmarks_gdal_cli",
-                # ("benchmarks_duckdb", {"file_format": "geoparquet"}),
-                # ("benchmarks_duckdb", {"file_format": "gpkg"}),
+                # "benchmarks_geofileops",
+                "benchmarks_gdal_cli",
+                ("benchmarks_duckdb", {"file_format": "geoparquet"}),
+                ("benchmarks_duckdb", {"file_format": "gpkg"}),
                 # "benchmarks_geopandas",
-                # "benchmarks_dask_geopandas",
+                "benchmarks_dask_geopandas",
             ],
-            # functions=["buffer"],
+            functions=["buffer_sealed"],
             # functions=["_symdif_complexpolys_agri"],
         )
         return

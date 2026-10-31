@@ -110,3 +110,9 @@ run_datetime,package,package_version,operation,operation_descr,secs_taken,max_me
 2026-10-31 10:36:29.961626,dask-geopandas,0.5.0,buffer,buffer agri parcels BEFL (~500k polygons),18.150847,2959548416,"{'nb_cpu': 12, 'os': 'Windows'}"
 2026-10-31 11:12:03.898665,dask-geopandas,0.5.0,dissolve,dissolve agri parcels BEFL (~500k polygons),2132.683491,3725496320,{'os': 'Windows'}
 2026-10-31 11:27:41.411052,dask-geopandas,0.5.0,dissolve_groupby,"dissolve on agri parcels BEFL (~500k polygons), groupby=GWSGRPH_LB",936.635106,2645823488,{'os': 'Windows'}
+2026-10-31 13:07:23.069192,geofileops,0.12.0,buffer_sealed,buffer on sealed surfaces layer BEFL (~2.6M polygons),109.195864,3291156480,"{'nb_cpu': 12, 'os': 'Windows'}"
+2026-10-31 13:18:11.656848,geopandas,1.2.0,buffer_sealed,buffer sealed surfaces BEFL (~2.6M polygons),647.59806,13895208960,{'os': 'Windows'}
+2026-10-31 14:11:49.546676,dask-geopandas,0.5.0,buffer_sealed,buffer sealed surfaces BEFL (~2.6M polygons),175.247305,25868988416,"{'nb_cpu': 12, 'os': 'Windows'}"
+2026-10-31 14:55:02.781067,duckdb-geoparquet,1.5.6,buffer_sealed,"buffer sealed surfaces BEFL (~2.6M polygons), distance=1",2494.757424,7091564544,"{'nb_cpu': 12, 'file_format': 'geoparquet', 'io': 'read_parquet, COPY to GeoParquet', 'os': 'Windows'}"
+2026-10-31 15:19:28.843764,duckdb-gpkg,1.5.6,buffer_sealed,"buffer sealed surfaces BEFL (~2.6M polygons), distance=1",1465.418525,1497747456,"{'nb_cpu': 12, 'file_format': 'gpkg', 'io': 'ST_Read (single-threaded), GDAL COPY to GPKG', 'os': 'Windows'}"
+2026-10-31 15:45:41.669129,gdal_cli,3.13.3,buffer_sealed,buffer sealed surfaces BEFL (~2.6M polygons),1572.053894,1591152640,{'os': 'Windows'}

@@ -58,30 +58,111 @@ def test_save_chart_masks_and_annotates_values_above_limit(
     assert len(value_labels) == 3
     assert all(text.get_fontweight() == "normal" for text in value_labels)
     assert annotation.arrow_patch is None
-    assert annotation.xycoords == ("data", "axes fraction")
-    assert annotation.xy[1] > 1
+    assert annotation.xy[1] == 1.0
+    assert annotation.get_position()[1] == 12
     assert annotation.get_position()[0] == 8
     assert annotation.get_ha() == "left"
-    assert arrow.xycoords == ("data", "axes fraction")
-    assert arrow.xy[1] > 1
+    assert arrow.xy[1] == 1.0
     assert arrow.xy[0] == arrow.get_position()[0]
-    assert arrow.xy[1] > annotation.xy[1]
+    assert arrow.get_position()[1] == 1.0
     marker = axes.lines[1]
     assert marker.get_marker() == "o"
     assert marker.get_color() == axes.lines[0].get_color()
     assert marker.get_xdata()[0] > arrow.xy[0]
-    assert marker.get_ydata()[0] > 1
+    assert marker.get_ydata()[0] == 1.0
     assert annotation.xy[0] == marker.get_xdata()[0]
     figures[0].canvas.draw()
+    axes_top = axes.get_window_extent().y1
+    points_per_pixel = 72 / figures[0].dpi
+    marker_y = marker.get_transform().transform(
+        (marker.get_xdata()[0], marker.get_ydata()[0])
+    )[1]
+    arrow_head_y = arrow.xycoords.transform(arrow.xy)[1]
+    assert np.isclose((marker_y - axes_top) * points_per_pixel, 12)
+    assert np.isclose((arrow_head_y - axes_top) * points_per_pixel, 22)
     annotation_bbox = annotation.get_window_extent()
     assert annotation_bbox.y0 > axes.get_window_extent().y1
     title_bbox = axes.title.get_window_extent()
     assert not annotation_bbox.overlaps(title_bbox)
     assert title_bbox.y1 <= figures[0].bbox.y1
-    assert figures[0].bbox.y1 - title_bbox.y1 < figures[0].bbox.height * 0.04
+    assert title_bbox.y0 > annotation_bbox.y1
+    assert not arrow.get_window_extent().overlaps(title_bbox)
     assert axes.get_ylim()[1] < 10_000
     assert chart_path.is_file()
     pd.testing.assert_frame_equal(df, original_df)
+
+
+def test_save_chart_orders_overflow_values_by_size(monkeypatch, tmp_path) -> None:
+    figures = _capture_figures(monkeypatch)
+    df = pd.DataFrame(
+        {
+            "dask-geopandas": [25.87, 2.0],
+            "geopandas": [13.90, 1.0],
+            "duckdb-gpkg": [1.5, 10.89],
+            "duckdb-geoparquet": [0.5, 10.66],
+        },
+        index=["buffer_sealed", "dissolve_groupby"],
+    )
+
+    for chart_index, height in enumerate((8, 4)):
+        reporter.save_chart(
+            df=df,
+            title="Comparison of libraries, max memory in GB\n",
+            output_path=tmp_path / f"chart_{chart_index}.png",
+            print_labels_on_points=True,
+            point_labels_to_right=True,
+            y_value_formatter="{0:.2f}",
+            size=(8, height),
+            linestyle="None",
+            gridlines="y",
+            y_value_limit=6.0,
+        )
+
+    for figure in figures:
+        axes = figure.axes[0]
+        figure.canvas.draw()
+        overflow_labels = {
+            text.get_text(): text
+            for text in axes.texts
+            if text.get_text() in {"25.87", "13.90", "10.89", "10.66"}
+        }
+        assert overflow_labels["25.87"].get_position()[1] == 24
+        assert overflow_labels["13.90"].get_position()[1] == 12
+        assert overflow_labels["10.89"].get_position()[1] == 24
+        assert overflow_labels["10.66"].get_position()[1] == 12
+
+        arrows = [
+            text
+            for text in axes.texts
+            if text.get_text() == "" and text.arrow_patch is not None
+        ]
+        assert len(arrows) == 2
+        points_per_pixel = 72 / figure.dpi
+        axes_top = axes.get_window_extent().y1
+        label_centers = {
+            label: sum(overflow_labels[label].get_window_extent().intervaly) / 2
+            for label in ("25.87", "13.90")
+        }
+        assert np.isclose(
+            (label_centers["25.87"] - label_centers["13.90"]) * points_per_pixel,
+            12,
+        )
+        assert np.isclose(
+            (label_centers["25.87"] - axes_top) * points_per_pixel,
+            24,
+        )
+
+        title_bbox = axes.title.get_window_extent()
+        title_offset = (title_bbox.y0 - axes_top) * points_per_pixel
+        assert np.isclose(title_offset, 34)
+        arrow_head_offsets = [
+            (arrow.xycoords.transform(arrow.xy)[1] - axes_top) * points_per_pixel
+            for arrow in arrows
+        ]
+        assert all(np.isclose(offset, 34) for offset in arrow_head_offsets)
+        assert all(
+            not arrow.get_window_extent().overlaps(title_bbox) for arrow in arrows
+        )
 
 
 def test_save_chart_keeps_values_when_limit_is_not_set(monkeypatch, tmp_path) -> None:
@@ -185,7 +266,7 @@ def test_generate_reports_accepts_duplicate_latest_rows_with_same_description(
     assert charts[0]["title"] == "geopandas-buffer\n(Buffer)"
     assert "overflow_axes_top" not in charts[0]
     assert charts[1]["title"] == "Comparison of libraries, time in sec\n"
-    assert charts[1]["overflow_axes_top"] == 0.82
+    assert "overflow_axes_top" not in charts[1]
     assert charts[2]["title"] == "Comparison of libraries, max memory in GB\n"
     assert (
         charts[2]["output_path"] == tmp_path / "reports" / "GeoBenchmark_max_memory.png"
