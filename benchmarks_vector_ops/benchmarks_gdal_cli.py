@@ -172,7 +172,5 @@ def _symdif_complexpolys_agriprc(tmp_dir: Path) -> RunResult:
         method_path=method_path,
         operation="sym-difference",
         operation_name="symdif_complexpolys_agriprc",
-        operation_descr=(
-            f"symmetric difference of {input_descr} and {method_descr}"
-        ),
+        operation_descr=(f"symmetric difference of {input_descr} and {method_descr}"),
     )
